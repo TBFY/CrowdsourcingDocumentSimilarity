@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Document Similarity Task</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/mturk-public/externalHIT_v1.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+        integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous" />
+    <style>
+        input[type="range"].unmoved::-webkit-slider-thumb {
+            border: 1px solid #dddddd;
+            background: #dddddd;
+        }
+
+        input[type="range"].unmoved::-moz-range-thumb {
+            border: 1px solid #dddddd;
+            background-color: #dddddd;
+        }
+
+        input[type="number"].wrong {
+            border-color: red;
+            color: red;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container p-5">
+        <div class="row justify-content-center">
+            <button type="button" class="btn btn-primary col-sm-10 d-none" data-toggle="collapse"
+                data-target="#instructions-panel" id="instructions-toggle">
+                <span id="instructions-toggle-text">Show Instructions</span>
+            </button>
+        </div>
+        <div id="instructions-panel" class="row">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm text-center" style="background-color: #edfcfb;">
+                <h4 class="text-left mt-3"><strong>Task instructions</strong></h4>
+                <dl class="dl-horizontal text-left">
+                    <dt id="instructions-project-header">Project</dt>
+                    <dd id="instructions-project"></dd>
+                    <dt>Introduction</dt>
+                    <dd id="instructions-intro"></dd>
+                    <dt>What is similarity</dt>
+                    <dd id="instructions-similarities"></dd>
+                    <dt>Task rules</dt>
+                    <dd id="instructions-rules"></dd>
+                </dl>
+                <button type="button" class="btn btn-success col-sm-2 mb-3" id="ready-button">
+                    I'm ready!
+                </button>
+            </div>
+        </div>
+        <br />
+        <div id="task-panel" class="row d-none">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm" style="background-color: #edfcfb;">
+                <h4 class="text-left mt-3">
+                    Pair <strong><span id="current-pair"></span></strong> of
+                    <strong><span id="n-pairs"></span></strong>:
+                </h4>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h5><span id="title-1"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-1"></p>
+                        </div>
+                        <ul id="metadata-1" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                    <div class="col-sm-6">
+                        <h5><span id="title-2"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-2"></p>
+                        </div>
+                        <ul id="metadata-2" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                </div>
+                <br />
+                                <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <form>
+                        <label for="input-similarity">How much similarity is there between the pair of documents
+                            shown above?</label>
+                        <input type="range" class="mx-auto custom-range pl-4 pr-4" id="input-similarity" min="0"
+                            max="3" />
+                        <div class="row">
+                            <p class="text-left col-sm-3">None</p>
+                            <p class="text-center col-sm-3">Low</p>
+                            <p class="text-center col-sm-3">Medium</p>
+                            <p class="text-right col-sm-3">High</p>
+                        </div>
+                        <label for="input-confidence">How confident are you of your answer?</label>
+                        <input type="range" class="mx-auto custom-range pl-4 pr-4" id="input-confidence" min="0"
+                            max="4" />
+                        <div class="row">
+                            <p class="col-sm-6 text-left">Not confident</p>
+                            <p class="col-sm-6 text-right">Highly confident</p>
+                        </div>
+                    </form>
+                </div>
+                <br />
+                <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <form>
+                        <label for="input-reason">Please tell us what similarities and differences you found. At least 20 characters.</label>
+                        <textarea class="form-control mx-auto custom-range pl-4 pr-4" rows="5" id="input-reason"
+                            placeholder="Provide a reason here ..."></textarea>
+                    </form>
+                </div>
+                <div class="row p-3">
+                    <button type="button" class="btn btn-primary col-sm-2 mr-auto" id="previous-pair">
+                        Previous
+                    </button>
+                    <button type="button" class="btn btn-success col-sm-2 ml-auto" id="presubmit" data-toggle="modal"
+                        data-target="#submitModal">
+                        Submit
+                    </button>
+                    <button type="button" class="btn btn-primary col-sm-2 ml-auto" id="next-pair">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="submitModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Submit your work?</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    Please make sure every question has been properly answered before
+                    submitting your work. Incomplete work will not be rewarded!
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-danger ml-auto" data-dismiss="modal" value="Cancel" />
+                    <input type="button" class="btn btn-success mr-auto" data-dismiss="modal" value="Submit"
+                        id="submit" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="errorModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Warning</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="warning-text">Your answer didn't pass our quality check. Please review your
+                        answers and try again!</span>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-warning mx-auto" data-dismiss="modal" value="OK"
+                        id="close_error" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="successModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Success!</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="success-text">Your answer passed our quality check! Press finish to submit
+                        them. We appreciate any feedback you may have on the task.</span>
+                </div>
+                <textarea class="form-control" rows="5" id="feedback_text"
+                    placeholder="Type your feeback here ..."></textarea>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-success mx-auto" data-dismiss="modal" value="Finish"
+                        id="close_success" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <form name="mturk_form" method="post" id="mturk_form" action="https://www.mturk.com/mturk/externalSubmit">
+        <input type="hidden" value="" name="assignmentId" id="assignmentId" />
+        <input type="submit" id="submitButton" style="visibility: hidden;" />
+        <input type="hidden" name="outputs" value="" id="outputs" />
+        <input type="hidden" name="times" value="" id="times" />
+        <input type="hidden" name="events" value="" id="events" />
+        <input type="hidden" name="feedback" value="" id="feedback" />
+    </form>
+    <script language="Javascript">
+        let documentPairs = [{'document_1': {'id': 'ocds-0c46vo-0033-193803_Tender_193803', 'body': 'The contract concerns a framework agreement for delivery of optical components e. g.  spherical lenses ND filters diffusers mirrors optical fibers couplers amplifiers and another framework agreement for delivery of opto-mechanics e. g.  mountings translation stages supportposts and mo-tion controllers.  Researchers laboratory technicians and students need framework agreements with a wide assortment of optical components and opto-mechanics because their specific needs are very variable in terms of researchers individual research and assignments.  The value of each framework agreement is expected to be approximately1. 5 million DKK annually and covers all of DTUs departments and locations.  Equipmentitems with a price above DKK 30. 000 is not part of each framework agreement.'}, 'document_2': {'id': 'ocds-0c46vo-0133-145328-2019_Tender_145328-2019_td', 'body': 'Bekkestua Lower Secondary School is currently a lower secondary school with roughly 475 students and 50 employees.  The schools are located at Falkeveien 14-16 and have Nadderud Arena Nadderudhallen and the new Bekkestua Primary School as their closest neighbours.  The school buildings block A and B are originally from 1968 but the building stock was partly rehabilitated internally in 20122013.  In connection with the rehabilitation a new breezeway was established linking the two blocks together.  In the planning phase it was concluded that the existing block A and breezeway would be kept and partially rehabilitated.  Block B will be demolished and a new extension will be established.  Bekkestua Lower Secondary School will be constructed as the first ten parallel lower secondary school in Brum Municipality.  The main concept for the new ten parallel Bekkestua Lower Secondary School will be a building structure with an H for with a central internal common area in the middle the heart of the school that binds all the wings with stairs teaching workspaces and special rooms together. Further information about the project and the contract can be found in Part 2 Assignment Description with associated annex.'}, 'g_id': 1}, {'document_1': {'id': 'ocds-0c46vo-0005-41074_Tender_41074', 'body': 'The BBC is launching a new multi-supplier design research framework to replace the existing agreement which expires in June 2019.  The new framework Design Research Framework II will provide the BBC with access to a range of specialist design research service providers.    Design research ensures the audience are at the heart of the BBC online taking insights and using them to empower decision-making and create products that our audience love to use.   Successful service providers awarded a place on the framework will have experience and capability to meet all the BBCs distinct design research requirements The framework will provide BBC with additional design research expertise through a framework of capable and qualified external service providers.  The service providers will conduct design research services across the BBCs online portfolio including News Sport Weather Childrens Education Radio and Music iPlayer Interactive TV Homepage alongside the systems and services that power these projects.    Service providers will work on a range of projects including research when no internal resource is available or where a distinct specialism andor technology of an external service provider is required.  '}, 'document_2': {'id': 'ocds-0c46vo-0020-sheffield_1955_Tender_sheffield_1955', 'body': '2169429MYNAMRC18       3D Printers 2 Lots   The University of Sheffield wishes to invite tenders for 3D Printers 2 Lots on behalf of the Nuclear Advanced Manufacturing Research Centre Midlands.  Scope of RequirementThe new Nuclear AMRC facility located in the Midlands has a requirement to be able to rapidly produce prototypes of designs for examination and has identified that 3D Printing is the best method of achieving this criteria.  Because of this we are looking to purchase four 3D printing technologies to enhance the capability of our centre and gain knowledge which we can pass onto our customers partners and local SMEs in rapid prototyping advanced manufacturing and 3D printing.  The lots are required to meet a high demand provide scope for expansion in the future and also demonstrate how the technology can replace some traditional equipment.  The machines will be used to provide 3D printed components in an expanded range of materials to support research and development projects being carried out at the Nuclear AMRC Midlands facility  Tender Process and DocumentationThis procurement is an non-EU open procedure conducted in accordance with the Public Contracts Regulations 2015.  The ITT can be downloaded by registering and expressing your interest on the Universitys e-tendering system httpsin-tendhost. co. ukSheffield If you have any questions or comments in relation to this tender they must be submitted via the In-tend System this can be accessed at httpsin-tendhost. co. ukSheffield Completed tenders must be returned through the same e-tendering system.  Closing date for receipt of tenders 29th January 2019 at 12 noon UK time.  '}, 'g_id': 0}, {'document_1': {'id': 'ocds-0c46vo-0005-39393_Tender_39393', 'body': 'The Calderdale  Kirklees Posture and Mobility Service is commissioned and jointly funded by NHS Calderdale Greater Huddersfield and North Kirklees Clinical Commissioning Groups CCGs.  The service provides equipment to meet the postural and mobility needs of all people who are eligible to receive NHS services within Kirklees and Calderdale.   This does predominately mean wheelchairs and specialist postural seating.   As part of the commissioning cycle the CCGs would like to gather information and opinions from experienced service providers to help us to develop the service and be prepared to deal with future demands.  In common with other parts of the country demand for posture and mobility equipment is growing due to an ageing population and increasing numbers of children with more complex needs.  As budgets are not increasing at the same rate we need to make the best use of the funding we have.  '}, 'document_2': {'id': 'ocds-0c46vo-0009-DN370863-2_Tender_DN370863-2', 'body': '1 The re-tendering of a number of existing supported living schemes known as Group Supported Living2 The appointment of a Development Partner to redesign and re-provide a number of supported living schemes3 Establish a framework agreement for provision of future supported living requirements for people with a learning disability '}, 'g_id': 0}, {'document_1': {'id': 'ocds-0c46vo-0005-40737_Tender_40737', 'body': 'The Countess of Chester Hospital NHS Foundation Trust through its Commercial Procurement Services wishes to award a national framework agreement for the supply of Smart Heating Systems.  Smart Heating systems incorporate control and communications technology with energy-saving heating systems to reduce costs and carbon emissions associated with heating.  Solutions primarily involve the installation of high-efficiency heaters that are connected via a buildings electrical circuit andor wirelessly to each other and to external analytics and control centres enabling monitoring and control of energy usage system status reporting and software updates.  The system will be scalable with units working individually and together to create a coherent platform for managing buildings to drive efficiencies across estates.  The system should require zero maintenance input from the end-user and approach as close as possible a heating as a service model.   This will be a framework agreement with no commitment or guaranteed level of business.   An extract of the full set of ITT documents is attached to this opportunity listing.   The full ITT can be viewed by logging in to your NHS Sourcing account and expressing interest in this opportunity.   Responses must only be made through the NHS Sourcing portal.  '}, 'document_2': {'id': 'ocds-0c46vo-0022-FEB284721_Tender_FEB284721', 'body': 'To augment human resources needs during business operation peak periods by having easy access to skilled and flexible manpower primarily for One HMG partners.  This will allow them to deploy readily available manpower at minimal cost and within budget.  '}, 'g_id': 0}, {'document_1': {'id': 'ocds-0c46vo-0133-031309-2019_Tender_031309-2019_td', 'body': 'Contract Hire of Cars and 4x4s including car Derived Vans up to 35 T GVW  with and without Maintenance Contract hire of commercial vehicles up to 35T GVW  with and without maintenance.  Contract hire of commercial vehicles 35 T GVW and above  with and without maintenance.  Contract hire of buses and coaches vehicles over 7 passenger seats  with and without maintenance.'}, 'document_2': {'id': 'ocds-0c46vo-0133-031309-2019_Tender_031309-2019_td_PARA', 'body': 'Vehicle and 4x4 service hire with vehicle related fans up to 35 T GVW with and ohne Maintenance Up to 35 T GVW with and without maintenance contract hire of commercial vehicles  Contract hire, with and without service, of 35 T GVW commercial vehicles.  Contract hiring of buses and coaches with and without maintenance of 7 passenger seats.'}, 'g_id': 2}];
+
+        let total = documentPairs.length;
+
+        var outputs = [];
+        for (i = 0; i < total; i++) {
+            outputs[i] = { similarity: -1, confidence: -1, reason: "" };
+        }
+
+        var events = [];
+
+        function log_event(event_type, event_attr) {
+            event_obj = {
+                timestamp: new Date(),
+                type: event_type
+            };
+            if (event_attr != null) {
+                event_obj.attr = event_attr;
+            }
+            events.push(event_obj);
+        }
+
+        log_event("page_displayed", null);
+
+        var times = Array(total).fill(0.0);
+        var lastChange = null;
+
+        failCount = 0;
+
+        $("#instructions-project").html("We are a group of researchers of the University of Southampton (United Kingdom). We are conducting research to evaluate how subjective similarity scores relate to the ones computed by automated algorithms. This study is funded by the European Union's Horizon 2020 research and innovation programme under grant agreement No 780247. No personal information will be collected during this experiment and all information will be treated anonymously, so there are no risks from participating and no way of identifying your personal details. After you've submitted your responses, there's no way to withdraw them. The data collected in this study will consist only of your inputs, the time you spent on the task and which buttons you clicked. It will be stored in a password protected computer and analysed for research purposes and its results published on academic journals. The study, with ref. no. ERGO/FPSE/54352, has received ethical approval on 16/01/2020, following the University of Southampton guidelines. For more information, check https://theybuyforyou.com. If you have any questions about how your data is used, or wish to exercise any of your rights, please consult the University's data protection webpage (https://www.southampton.ac.uk/legalservices/what-we-do/data-protection-and-foi.page) where you can make a request using our online form. If you need further assistance, please contact the University's Data Protection Officer (data.protection@soton.ac.uk).<br/> <b>By continuing with the task, you agree to take part in this research project and consent for the data collected to be used for the purpose of this study. Participation is voluntary and you may cancel the task at anytime for any reason before submitting it.</b> ");
+        $("#instructions-intro").html("In this task, you're asked to take a look at five pairs of documents. For each pair, please read both documents, compare them to each other and provide us with:<br>1) A similarity score, from none to high similarity;<br>2) A confidence score, telling us how confident you are in your answer;<br>3) A <b>brief</b> text telling us why you considered their similarity to be on that level.");
+        $("#instructions-similarities").html("All documents in this task are tenders, which means government requests for carrying out work or supplying goods. Similarity here may be anything that makes you think that the two documents resemble each other except for both being tenders, e.g. structure, theme, topics, purpose, style, etc. Anything which can be said about document A, if it can also be said about document B, but not about other documents in general, would probably be a similarity.");
+        $("#instructions-rules").html("- You can navigate freely through the pairs of documents using the buttons at the bottom of the page.<br>- You have to read each document fully to give us a good response.<br>- You must fill all the information requested. The sliders only have information if they're blue. If they're already at the level you desire, just click them to make them blue. This means the text boxes should also all be filled.<br>- Do not provide generic and simple reasons on the text box. Things such as 'because they're similar in my view' or 'the documents are not similar' are not good reasons and will get rejected. Giving specific examples based on the content of the documents is excelent and will be approved.<br>- <i>Do not copy and paste parts of the documents into the reason box, this is not helpful and may disqualify you from future similar tasks.</i><br>- At the end of the task, we check these rules and also the quality of your work. If you don't pass the test, you can try two more times, for a total of three trials.<br>- Please press the button below when you're ready. You can open these instructions again anytime you wish.");
+
+        $("#n-pairs").text(total);
+
+        function showContent(currentPair) {
+            if (lastChange) {
+                times[parseInt($("#current-pair").text()) - 1] +=
+                    Date.now() - lastChange;
+            }
+            $("#current-pair").text(currentPair);
+            if (currentPair == 1) {
+                $("#previous-pair").hide();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            } else if (currentPair == total) {
+                $("#previous-pair").show();
+                $("#next-pair").hide();
+                $("#presubmit").show();
+            } else {
+                $("#previous-pair").show();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            }
+            pairIndex = currentPair - 1;
+            output = outputs[pairIndex];
+            if (output["similarity"] == -1) {
+                if ($("#input-similarity").prop("type") == "range") {
+                    $("#input-similarity").val(0);
+                } else if ($("#input-similarity").prop("type") == "number") {
+                    $("#input-similarity").val("");
+                }
+                $("#input-similarity").addClass("unmoved");
+            } else {
+                $("#input-similarity").val(output["similarity"]);
+                $("#input-similarity").removeClass("unmoved");
+            }
+            if (output["confidence"] == -1) {
+                $("#input-confidence").val(0);
+                $("#input-confidence").addClass("unmoved");
+            } else {
+                $("#input-confidence").val(output["confidence"]);
+                $("#input-confidence").removeClass("unmoved");
+            }
+
+            $("#input-reason").val(output["reason"]);
+
+            $("#document-1").text(documentPairs[pairIndex]["document_1"]["body"]);
+            $("#title-1").text(documentPairs[pairIndex]["document_1"]["title"]);
+            $("#metadata-1").empty();
+            for (md in documentPairs[pairIndex]["document_1"]["metadata"]) {
+                $("#metadata-1").append(
+                    `<li><i>${md}</i>: ${documentPairs[pairIndex]["document_1"]["metadata"][md]}</li>`
+                );
+            }
+
+            $("#document-2").text(documentPairs[pairIndex]["document_2"]["body"]);
+            $("#title-2").text(documentPairs[pairIndex]["document_2"]["title"]);
+            $("#metadata-2").empty();
+            for (md in documentPairs[pairIndex]["document_2"]["metadata"]) {
+                $("#metadata-2").append(
+                    `<li><i>${md}</i>: ${documentPairs[pairIndex]["document_2"]["metadata"][md]}</li>`
+                );
+            }
+
+            lastChange = Date.now();
+        }
+
+        function validateRegex(str) {
+            var reU = /^(null|(?!0*[.]0*$|[.]0*$|0*$)\d+[.]?\d{0,}$)/;
+            return reU.test(str);
+        }
+
+        function verifyAnswers() {
+            times[times.length - 1] += Date.now() - lastChange;
+            lastChange = Date.now();
+
+            var allOutputsMovedCheck = true;
+            const outputs_flat = [].concat(...outputs)
+            for (s of outputs_flat) {
+                if (
+                    s["similarity"] == -1 ||
+                    s["confidence"] == -1 ||
+                    s["reason"].length < 19
+                ) {
+                    allOutputsMovedCheck = false;
+                }
+            }
+            if (!allOutputsMovedCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "outputs_moved_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            var allTimesCheck = true;
+            for (t of times) {
+                if (t < 15000) {
+                    allTimesCheck = false;
+                }
+            }
+            if (!allTimesCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "minimum_time_check",
+                    times: JSON.parse(JSON.stringify(times))
+                });
+            }
+
+            var allGoldenCheck = true;
+
+            higher_pair_index = documentPairs.map(d => d["g_id"]).indexOf(2);
+            higher_score = outputs[higher_pair_index]["similarity"];
+            lower_pair_index = documentPairs.map(d => d["g_id"]).indexOf(1);
+            lower_score = outputs[lower_pair_index]["similarity"];
+            if (higher_score <= lower_score) {
+                allGoldenCheck = false;
+            }
+            if (!allGoldenCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "golden_standard_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            return allOutputsMovedCheck && allTimesCheck && allGoldenCheck;
+        }
+
+        $(function () {
+            $('#input-reason').bind('copy paste', function (e) {
+                e.preventDefault();
+            });
+            $("#previous-pair").click(function () {
+                var pair = parseInt($("#current-pair").text());
+                newPair = pair - 1;
+                showContent(newPair);
+                log_event("moved_backward", {
+                    new_pair_index: newPair,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#next-pair").click(function () {
+                var pair = parseInt($("#current-pair").text());
+                newPair = pair + 1;
+                showContent(newPair);
+                log_event("moved_forward", {
+                    new_pair_index: newPair,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#ready-button").click(function () {
+                $("#instructions-project-header").addClass("d-none");
+                $("#instructions-project").addClass("d-none");
+                $(this).addClass("d-none");
+                $("#instructions-toggle").removeClass("d-none");
+                $("#instructions-panel").addClass("collapse");
+                $("#task-panel").removeClass("d-none");
+                showContent(1);
+                log_event("task_started", null);
+            });
+            $("#instructions-toggle").click(function () {
+                is_shown = $("#instructions-panel").hasClass("show");
+                if (is_shown) {
+                    $("#instructions-toggle-text").text("Show Instructions");
+                    log_event("closed_instructions", null);
+                } else {
+                    $("#instructions-toggle-text").text("Hide Instructions");
+                    log_event("opened_instructions", null);
+                }
+            });
+            $("[type=range]").mouseup(function () {
+                $(this).removeClass("unmoved");
+                [_, type] = this.id.split("-");
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                outputs[pairIndex][type] = parseInt($(this).val());
+            });
+            $("#input-reason").change(function () {
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                outputs[pairIndex]["reason"] = $(this).val();
+            });
+            $("input[type=number]").change(function () {
+                [_, type] = this.id.split("-");
+                value = $(this).val();
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                if (!validateRegex(value)) {
+                    $(this).addClass("wrong");
+                    outputs[pairIndex][type] = -2;
+                } else {
+                    $(this).removeClass("wrong");
+                    outputs[pairIndex][type] = parseFloat($(this).val());
+                }
+                if (outputs[pairIndex]["similarity"] == -2) {
+                    $("#next-pair").attr("disabled", true);
+                    $("#previous-pair").attr("disabled", true);
+                    $("#submit").attr("disabled", true);
+                } else {
+                    $("#next-pair").attr("disabled", false);
+                    $("#previous-pair").attr("disabled", false);
+                    $("#submit").attr("disabled", false);
+                }
+            });
+            $("#submit").click(function () {
+                if (verifyAnswers()) {
+                    $("#successModal").modal("toggle");
+                    $("#successModal").on("hidden.bs.modal", function () {
+                        log_event("task_finished", null);
+                        $("#feedback").val($("#feedback_text").val());
+                        $("#outputs").val(JSON.stringify(outputs));
+                        $("#times").val(JSON.stringify(times));
+                        $("#events").val(JSON.stringify(events));
+                        $("#submitButton").trigger("click");
+                    });
+                } else {
+                    failCount = failCount + 1;
+                    if (failCount >= 3) {
+                        $("#warning-text").html(
+                            "Your answer didn't pass our quality check.<br><br><strong>Unfortunately, you've reached the maximum amount of trials.<br><br>This window will be erased. Thank you very much for your work and please press return above so other worker may take this task.</strong>"
+                        );
+                        $("#errorModal").modal("toggle");
+                        $("#errorModal").on("hidden.bs.modal", function () {
+                            $("*").empty();
+                        });
+                    } else {
+                        $("#errorModal").modal("toggle");
+                    }
+                }
+            });
+        });
+        turkSetAssignmentID();
+    </script>
+</body>
+
+</html>

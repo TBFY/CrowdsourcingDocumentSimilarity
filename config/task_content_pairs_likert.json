@@ -1,0 +1,47 @@
+{
+    "instructions_project": "\"We are a group of researchers of the University of Southampton (United Kingdom). We are conducting research to evaluate how subjective similarity scores relate to the ones computed by automated algorithms. This study is funded by the European Union's Horizon 2020 research and innovation programme under grant agreement No 780247. No personal information will be collected during this experiment and all information will be treated anonymously, so there are no risks from participating and no way of identifying your personal details. After you've submitted your responses, there's no way to withdraw them. The data collected in this study will consist only of your inputs, the time you spent on the task and which buttons you clicked. It will be stored in a password protected computer and analysed for research purposes and its results published on academic journals. The study, with ref. no. ERGO/FPSE/54352, has received ethical approval on 16/01/2020, following the University of Southampton guidelines. For more information, check https://theybuyforyou.com. If you have any questions about how your data is used, or wish to exercise any of your rights, please consult the University's data protection webpage (https://www.southampton.ac.uk/legalservices/what-we-do/data-protection-and-foi.page) where you can make a request using our online form. If you need further assistance, please contact the University's Data Protection Officer (data.protection@soton.ac.uk).<br/> <b>By continuing with the task, you agree to take part in this research project and consent for the data collected to be used for the purpose of this study. Participation is voluntary and you may cancel the task at anytime for any reason before submitting it.</b> \"",
+    "instructions_intro": "\"In this task, you're asked to take a look at five pairs of documents. For each pair, please read both documents, compare them to each other and provide us with:<br>1) A similarity score, from none to high similarity;<br>2) A confidence score, telling us how confident you are in your answer;<br>3) A <b>brief</b> text telling us why you considered their similarity to be on that level.\"",
+    "instructions_similarities": "\"Similarity here may be anything that makes you think that the two documents resemble each other, e.g. topics covered, theme, structure, purpose, style, etc. Anything that is found in document A, if it can also be found in document B, but not in other documents in general, would probably be a similarity. Please note that high similarity doesn't mean equal documents; two documents can be different but still be highly similar.\"",
+    "instructions_rules": "\"- You can navigate freely through the pairs of documents using the buttons at the bottom of the page.<br>- You have to read a good part of each document to give us a good response. Try spending at least 10 seconds in each pair.<br>- You must fill all the information requested. The sliders only have information if they're blue. If they're already at the level you desire, just click them to make them blue. This means the text boxes should also all be filled (but they don't turn blue).<br>- Do not provide generic and simple reasons on the text box. Things such as 'because they're similar in my view' or 'the documents are not similar' are not good reasons and will get rejected. Giving specific examples based on the content of the documents is excelent and will be approved.<br>- <i>Do not copy and paste parts of the documents into the reason box, this is not helpful and may disqualify you from future similar tasks.</i><br>- At the end of the task, we check these rules and also the quality of your work. If you don't pass the test, you can try two more times, for a total of three trials.<br>- Please press the button below when you're ready. You can open these instructions again anytime you wish.\"",
+    "time_thr": "10000",
+    "task_type": "pairs",
+    "input_scale": "likert",
+    "task_attributes":
+    {
+        "MaxAssignments": 5,
+        "LifetimeInSeconds": 604800,
+        "AssignmentDurationInSeconds": 3600,
+        "Reward": "0.60",
+        "Title": "Compare two documents [revised]",
+        "Keywords": "document, similarity, reading",
+        "Description": "Compare two documents according to how similar they are and tell us why",
+        "QualificationRequirements": [{
+            "QualificationTypeId": "000000000000000000L0",
+            "Comparator": "GreaterThanOrEqualTo",
+            "IntegerValues": [80],
+            "ActionsGuarded": "DiscoverPreviewAndAccept"
+        },
+        {
+            "QualificationTypeId": "00000000000000000040",
+            "Comparator": "GreaterThan",
+            "IntegerValues": [100],
+            "ActionsGuarded": "DiscoverPreviewAndAccept"
+        },
+        {
+            "QualificationTypeId": "00000000000000000071",
+            "Comparator": "In",
+            "LocaleValues":[{
+                "Country":"US"
+            },{
+                "Country":"CA"
+            },{
+                "Country":"GB"
+            },{
+                "Country":"AU"
+            },{
+                "Country":"NZ"
+            }],
+            "ActionsGuarded": "DiscoverPreviewAndAccept"
+        }]
+    }
+}

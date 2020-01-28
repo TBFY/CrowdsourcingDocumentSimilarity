@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Document Similarity Task</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/mturk-public/externalHIT_v1.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+        integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous" />
+    <style>
+        input[type="range"].unmoved::-webkit-slider-thumb {
+            border: 1px solid #dddddd;
+            background: #dddddd;
+        }
+
+        input[type="range"].unmoved::-moz-range-thumb {
+            border: 1px solid #dddddd;
+            background-color: #dddddd;
+        }
+
+        input[type="number"].wrong {
+            border-color: red;
+            color: red;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container p-5">
+        <div class="row justify-content-center">
+            <button type="button" class="btn btn-primary col-sm-10 d-none" data-toggle="collapse"
+                data-target="#instructions-panel" id="instructions-toggle">
+                <span id="instructions-toggle-text">Show Instructions</span>
+            </button>
+        </div>
+        <div id="instructions-panel" class="row">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm text-center" style="background-color: #edfcfb;">
+                <h4 class="text-left mt-3"><strong>Task instructions</strong></h4>
+                <dl class="dl-horizontal text-left">
+                    <dt id="instructions-project-header">Project</dt>
+                    <dd id="instructions-project"></dd>
+                    <dt>Introduction</dt>
+                    <dd id="instructions-intro"></dd>
+                    <dt>What is similarity</dt>
+                    <dd id="instructions-similarities"></dd>
+                    <dt>Task rules</dt>
+                    <dd id="instructions-rules"></dd>
+                </dl>
+                <button type="button" class="btn btn-success col-sm-2 mb-3" id="ready-button">
+                    I'm ready!
+                </button>
+            </div>
+        </div>
+        <br />
+        <div id="task-panel" class="row d-none">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm" style="background-color: #edfcfb;">
+                <h4 class="text-left mt-3">
+                    Pair <strong><span id="current-pair"></span></strong> of
+                    <strong><span id="n-pairs"></span></strong>:
+                </h4>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h5><span id="title-1"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-1"></p>
+                        </div>
+                        <ul id="metadata-1" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                    <div class="col-sm-6">
+                        <h5><span id="title-2"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-2"></p>
+                        </div>
+                        <ul id="metadata-2" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                </div>
+                <br />
+                    <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <form>
+                        <label for="input-similarity">How much similarity is there between the pair of documents shown above?</label>
+                        <div class="text-center">
+                            <input type="number" class="mx-auto pl-4 pr-4 text-center" id="input-similarity" min="0" step="any" data-bind="value:replyNumber" />
+                            <br><span id='input-similarity-message' style='color: red' class='d-none'>Value must be a decimal bigger than zero!</span>
+                        </div>
+                        <label for="input-confidence">How confident are you of your answer?</label>
+                        <input type="range" class="mx-auto custom-range pl-4 pr-4" id="input-confidence" min="0" max="4">
+                        <div class="row">
+                            <p class="col-sm-6 text-left">Not confident</p>
+                            <p class="col-sm-6 text-right">Highly confident</p>
+                        </div>
+                    </form>
+                </div>
+                <br>
+                <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <form>
+                        <label for="input-reason">Please tell us what similarities and differences you found. At least 20 characters.</label>
+                        <textarea class="form-control mx-auto custom-range pl-4 pr-4" rows="5" id="input-reason"
+                            placeholder="Provide a reason here ..."></textarea>
+                    </form>
+                </div>
+                <div class="row p-3">
+                    <button type="button" class="btn btn-primary col-sm-2 mr-auto" id="previous-pair">
+                        Previous
+                    </button>
+                    <button type="button" class="btn btn-success col-sm-2 ml-auto" id="presubmit" data-toggle="modal"
+                        data-target="#submitModal">
+                        Submit
+                    </button>
+                    <button type="button" class="btn btn-primary col-sm-2 ml-auto" id="next-pair">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="submitModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Submit your work?</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    Please make sure every question has been properly answered before
+                    submitting your work. Incomplete work will not be rewarded!
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-danger ml-auto" data-dismiss="modal" value="Cancel" />
+                    <input type="button" class="btn btn-success mr-auto" data-dismiss="modal" value="Submit"
+                        id="submit" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="errorModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Warning</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="warning-text">Your answer didn't pass our quality check. Please review your
+                        answers and try again! Try spending a little more time in each pair.</span>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-warning mx-auto" data-dismiss="modal" value="OK"
+                        id="close_error" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="successModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Success!</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="success-text">Your answer passed our quality check! Press finish to submit
+                        them. We appreciate any feedback you may have on the task.</span>
+                </div>
+                <textarea class="form-control" rows="5" id="feedback_text"
+                    placeholder="Type your feeback here ..."></textarea>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-success mx-auto" data-dismiss="modal" value="Finish"
+                        id="close_success" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <form name="mturk_form" method="post" id="mturk_form" action="https://www.mturk.com/mturk/externalSubmit">
+        <input type="hidden" value="" name="assignmentId" id="assignmentId" />
+        <input type="submit" id="submitButton" style="visibility: hidden;" />
+        <input type="hidden" name="outputs" value="" id="outputs" />
+        <input type="hidden" name="times" value="" id="times" />
+        <input type="hidden" name="events" value="" id="events" />
+        <input type="hidden" name="feedback" value="" id="feedback" />
+    </form>
+    <script language="Javascript">
+        let documentPairs = [{'document_1': {'id': 'ocds-0c46vo-0133-054387-2019_Tender_054387-2019_td', 'body': 'A new station Brent Cross West is proposed on the Midland Main Line MML.  The new station is part of the wider Brent Cross Cricklewood BXC development.  Outline planning consent for the development has been granted.  The new station is required to be completed commissioned handed over into operations and maintenance by May 2022.  The project proposals have been developed to GRIP4 single option development and have achieved approval in principle.  London Borough of Barnet LBB requires the scheme to be developed to the completion of GRIP stages 5 to 8.  LBB invite interested suppliers with the necessary experience and capability to successfully deliver a design and build contract to express an interest and register for this opportunity.  LBB will shortlist up to 3 highest scoring suppliers at SQ stage to the Initial Tender ITT stage.'}, 'document_2': {'id': 'ocds-0c46vo-0133-139515-2019_Tender_139515-2019_td', 'body': 'The scope of the services includes but is not limited to design of scheme specific branding  eye catching current unique and relevant design and production of scheme sales brochure-s in both print and web-suitable formats printing of sales brochures and other sales literature which includes recommending materials for print and liaising with suppliers production and printing of a range of other marketing materials  for example exhibition stands pop-uppull-up stands promotional branded items and storage of such items as required copywriting covering but not be limited to providing copy for scheme brochures producing adverts promotional advertorials and scheme specific editorial if required production of floor plans block plans site maps and other scheme drawings created using architects plans supplied by Newlon which on occasion require cleaning of additional layers of information information to be supplied in CAD where possible local area photography of schemes supply of all scheme assets including logos photography and floor plans in JPEG for use on our website and various other property portals production of photorealistic computer-generated images for marketing purposes design and build of content managed microsites for larger developments ensuring the content is current and up to date at all times design of on-site signage such as hoardings banners and contra-vision panels installation of the above on site signage including but not limited to liaising with construction site staff and supplying them with the necessary information required before gaining access to site project management of any out sourced services such as photography and signage installation CGI production 2D and 3D floor plans and printing liaison with media buyers with quick turnarounds including same day and in the right format design and production of sales aids for marketing suiteshow homes and launch events such as plot boards and general signage design of artwork for online and offline advertising design andor production of HTML emailers design andor production of digital adverts such as GIFs banner adverts or Facebook advertising images design of outdoor advertising such as train station adverts 48 sheet and 96 sheet outdoor posters design andor production of information leaflets and guides supply of all design files in their native format e. g.  IndesignPhotoshopIllustrator managing requirements for Affordable Home Shows Newlon choose to participate in and the hiring or any additional items required including helium for balloons and tablets scheme-specific launch events including but not limited to booking relevant venues as approved by Newlon planning and securing any catering requirements and assisting with event delivery show flat fit-outs if required.'}, 'g_id': 1}, {'document_1': {'id': 'ocds-0c46vo-0005-41074_Tender_41074', 'body': 'The BBC is launching a new multi-supplier design research framework to replace the existing agreement which expires in June 2019.  The new framework Design Research Framework II will provide the BBC with access to a range of specialist design research service providers.    Design research ensures the audience are at the heart of the BBC online taking insights and using them to empower decision-making and create products that our audience love to use.   Successful service providers awarded a place on the framework will have experience and capability to meet all the BBCs distinct design research requirements The framework will provide BBC with additional design research expertise through a framework of capable and qualified external service providers.  The service providers will conduct design research services across the BBCs online portfolio including News Sport Weather Childrens Education Radio and Music iPlayer Interactive TV Homepage alongside the systems and services that power these projects.    Service providers will work on a range of projects including research when no internal resource is available or where a distinct specialism andor technology of an external service provider is required.  '}, 'document_2': {'id': 'ocds-0c46vo-0022-FEB285806_Tender_FEB285806', 'body': 'Stoke-on-Trent College is intent on implementing an immersive 3D VR installation capable of rendering or displaying 3D and normal content from existing and proposed design applications from a range of sectors games design construction engineering sport and health science.  The installation will be used as part of an employer innovation hub and as a teaching resource for IT students enabling them to develop their skills in the development of VR and 3D modelling activities and the use of specialist software.  The idea will be that students will support employers in developing their ideas and bringing them into a virtual environment through use of the 3D immersive technology available with the equipment detailed in this technical specification.  We also anticipate that clients and partners will work with students sharing their data for our learners to model appropriate designs to be demonstrated to the companies involved.  '}, 'g_id': 0}, {'document_1': {'id': 'ocds-0c46vo-0005-40993_Tender_40993', 'body': 'One warehouse fulfilment and distribution provider for the storage of AHDB publications and materials.  Scheduled and bespoke mail outs of printed material and technical kits on demand to timelines as specified.  Bespoke ordering communication and reporting systems  including the need to answer phone calls and emails on behalf of AHDB sectors with a designated phone line and email address.  '}, 'document_2': {'id': 'ocds-0c46vo-0133-012216-2019_Tender_012216-2019_td', 'body': 'Devon County Council DCC requires a supplier to provide fixed line voice and data services.   DCC operates an internal voicetelephone network hosts about 7 000 extensions spread across approximately 40 sites.  All extensions have an associated DDI number for incoming calls.  DCC also operates a 60-seat call centre based in Tiverton which deals with the majority of incoming calls from the public for Council services such as Devon Highways Adult and Childrens Social Care and Trading Standards.  This is also based on our skype for business infrastructure with the intelligent call routing provided by Netcalls Liberty Contact Centre59R platform.   The Netcall platform is also used for other smaller contact centres within the authority as well as providing our corporate voicemail and speech recognition directory.  The majority of incoming and outgoing calls are carried by 3 SIP trunks.  '}, 'g_id': 0}, {'document_1': {'id': 'ocds-0c46vo-0005-40737_Tender_40737', 'body': 'The Countess of Chester Hospital NHS Foundation Trust through its Commercial Procurement Services wishes to award a national framework agreement for the supply of Smart Heating Systems.  Smart Heating systems incorporate control and communications technology with energy-saving heating systems to reduce costs and carbon emissions associated with heating.  Solutions primarily involve the installation of high-efficiency heaters that are connected via a buildings electrical circuit andor wirelessly to each other and to external analytics and control centres enabling monitoring and control of energy usage system status reporting and software updates.  The system will be scalable with units working individually and together to create a coherent platform for managing buildings to drive efficiencies across estates.  The system should require zero maintenance input from the end-user and approach as close as possible a heating as a service model.   This will be a framework agreement with no commitment or guaranteed level of business.   An extract of the full set of ITT documents is attached to this opportunity listing.   The full ITT can be viewed by logging in to your NHS Sourcing account and expressing interest in this opportunity.   Responses must only be made through the NHS Sourcing portal.  '}, 'document_2': {'id': 'ocds-0c46vo-0022-FEB284721_Tender_FEB284721', 'body': 'To augment human resources needs during business operation peak periods by having easy access to skilled and flexible manpower primarily for One HMG partners.  This will allow them to deploy readily available manpower at minimal cost and within budget.  '}, 'g_id': 0}, {'document_1': {'id': 'ocds-0c46vo-0033-193803_Tender_193803', 'body': 'The contract concerns a framework agreement for delivery of optical components e. g.  spherical lenses ND filters diffusers mirrors optical fibers couplers amplifiers and another framework agreement for delivery of opto-mechanics e. g.  mountings translation stages supportposts and mo-tion controllers.  Researchers laboratory technicians and students need framework agreements with a wide assortment of optical components and opto-mechanics because their specific needs are very variable in terms of researchers individual research and assignments.  The value of each framework agreement is expected to be approximately1. 5 million DKK annually and covers all of DTUs departments and locations.  Equipmentitems with a price above DKK 30. 000 is not part of each framework agreement.'}, 'document_2': {'id': 'ocds-0c46vo-0033-193803_Tender_193803_PARA', 'body': 'The contract relates to an optical component supply framework agreement e. g.  Sphere lenses ND spreaders mirrors optical fibres amplifiers and another opto-mechanical frame agreement. g.  Translation mountings stage includes motion controllers and mounting points.  Researchers laboratory technicians and students need framework agreements with a wide range of optical components and opto-mechanics, because individual research and assignments are variable in terms of their specific needs.  Approximately1 is assumed to be the amount of each framework agreement.'}, 'g_id': 2}];
+
+        let total = documentPairs.length;
+
+        var outputs = [];
+        for (i = 0; i < total; i++) {
+            outputs[i] = { similarity: -1, confidence: -1, reason: "" };
+        }
+
+        var events = [];
+
+        function log_event(event_type, event_attr) {
+            event_obj = {
+                timestamp: new Date(),
+                type: event_type
+            };
+            if (event_attr != null) {
+                event_obj.attr = event_attr;
+            }
+            events.push(event_obj);
+        }
+
+        log_event("page_displayed", null);
+
+        var times = Array(total).fill(0.0);
+        var lastChange = null;
+
+        failCount = 0;
+
+        $("#instructions-project").html("We are a group of researchers of the University of Southampton (United Kingdom). We are conducting research to evaluate how subjective similarity scores relate to the ones computed by automated algorithms. This study is funded by the European Union's Horizon 2020 research and innovation programme under grant agreement No 780247. No personal information will be collected during this experiment and all information will be treated anonymously, so there are no risks from participating and no way of identifying your personal details. After you've submitted your responses, there's no way to withdraw them. The data collected in this study will consist only of your inputs, the time you spent on the task and which buttons you clicked. It will be stored in a password protected computer and analysed for research purposes and its results published on academic journals. The study, with ref. no. ERGO/FPSE/54352, has received ethical approval on 16/01/2020, following the University of Southampton guidelines. For more information, check https://theybuyforyou.com. If you have any questions about how your data is used, or wish to exercise any of your rights, please consult the University's data protection webpage (https://www.southampton.ac.uk/legalservices/what-we-do/data-protection-and-foi.page) where you can make a request using our online form. If you need further assistance, please contact the University's Data Protection Officer (data.protection@soton.ac.uk).<br/> <b>By continuing with the task, you agree to take part in this research project and consent for the data collected to be used for the purpose of this study. Participation is voluntary and you may cancel the task at anytime for any reason before submitting it.</b> ");
+        $("#instructions-intro").html("In this task, you're asked to take a look at five pairs of documents. For each pair, please read both documents, compare them to each other and provide us with:<br>1) A similarity score, which can be any decimal number <b>greater than 0</b>, like 5, 100.2, 0.00001 or 2.2. <strong>Please make sure your scores are consistent</strong>: If pair A is more similar than pair B, than it should have a higher score than B, and vice-versa;<br>2) A confidence score, telling us how confident you are in your answer;<br>3) A short text telling us why you considered their similarity to be on that level.");
+        $("#instructions-similarities").html("Similarity here may be anything that makes you think that the two documents resemble each other, e.g. topics covered, theme, structure, purpose, style, etc. Anything that is found in document A, if it can also be found in document B, but not in other documents in general, would probably be a similarity. Please note that high similarity doesn't mean equal documents; two documents can be different but still be highly similar.");
+        $("#instructions-rules").html("- You can navigate freely through the pairs of documents using the buttons at the bottom of the page. However, if you provide an invalid similarity score, you'll not be able to move to other pairs until you change it to a valid one.<br>- You have to read each document fully to give us a good response. Try spending at least 10 seconds in each pair.<br>- You must fill all the information requested. The confidence slider only have information if it is blue. If it is already at the level you desire, just click it to make it blue. This means the text boxes should also all be filled. Text boxes don't become blue.<br>- At the end of the task, we check these rules and also the quality of your work. If you don't pass the test, you can try two more times, for a total of three trials.<br>- Please press the button below when you're ready. You can open these instructions again anytime you wish.");
+
+        $("#n-pairs").text(total);
+
+        function showContent(currentPair) {
+            if (lastChange) {
+                times[parseInt($("#current-pair").text()) - 1] +=
+                    Date.now() - lastChange;
+            }
+            $("#current-pair").text(currentPair);
+            if (currentPair == 1) {
+                $("#previous-pair").hide();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            } else if (currentPair == total) {
+                $("#previous-pair").show();
+                $("#next-pair").hide();
+                $("#presubmit").show();
+            } else {
+                $("#previous-pair").show();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            }
+            pairIndex = currentPair - 1;
+            output = outputs[pairIndex];
+            if (output["similarity"] == -1) {
+                if ($("#input-similarity").prop("type") == "range") {
+                    $("#input-similarity").val(0);
+                } else if ($("#input-similarity").prop("type") == "number") {
+                    $("#input-similarity").val("");
+                }
+                $("#input-similarity").addClass("unmoved");
+            } else {
+                $("#input-similarity").val(output["similarity"]);
+                $("#input-similarity").removeClass("unmoved");
+            }
+            if (output["confidence"] == -1) {
+                $("#input-confidence").val(0);
+                $("#input-confidence").addClass("unmoved");
+            } else {
+                $("#input-confidence").val(output["confidence"]);
+                $("#input-confidence").removeClass("unmoved");
+            }
+
+            $("#input-reason").val(output["reason"]);
+
+            $("#document-1").text(documentPairs[pairIndex]["document_1"]["body"]);
+            $("#title-1").text(documentPairs[pairIndex]["document_1"]["title"]);
+            $("#metadata-1").empty();
+            for (md in documentPairs[pairIndex]["document_1"]["metadata"]) {
+                $("#metadata-1").append(
+                    `<li><i>${md}</i>: ${documentPairs[pairIndex]["document_1"]["metadata"][md]}</li>`
+                );
+            }
+
+            $("#document-2").text(documentPairs[pairIndex]["document_2"]["body"]);
+            $("#title-2").text(documentPairs[pairIndex]["document_2"]["title"]);
+            $("#metadata-2").empty();
+            for (md in documentPairs[pairIndex]["document_2"]["metadata"]) {
+                $("#metadata-2").append(
+                    `<li><i>${md}</i>: ${documentPairs[pairIndex]["document_2"]["metadata"][md]}</li>`
+                );
+            }
+
+            lastChange = Date.now();
+        }
+
+        function validateRegex(str) {
+            var reU = /^(null|(?!0*[.]0*$|[.]0*$|0*$)\d+[.]?\d{0,}$)/;
+            return reU.test(str);
+        }
+
+        function verifyAnswers() {
+            times[times.length - 1] += Date.now() - lastChange;
+            lastChange = Date.now();
+
+            var allOutputsMovedCheck = true;
+            const outputs_flat = [].concat(...outputs)
+            for (s of outputs_flat) {
+                if (
+                    s["similarity"] == -1 ||
+                    s["confidence"] == -1 ||
+                    s["reason"].length < 19
+                ) {
+                    allOutputsMovedCheck = false;
+                }
+            }
+            if (!allOutputsMovedCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "outputs_moved_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            var allTimesCheck = true;
+            for (t of times) {
+                if (t < 1000) {
+                    allTimesCheck = false;
+                }
+            }
+            if (!allTimesCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "minimum_time_check",
+                    times: JSON.parse(JSON.stringify(times))
+                });
+            }
+
+            var allGoldenCheck = true;
+
+            higher_pair_index = documentPairs.map(d => d["g_id"]).indexOf(2);
+            higher_score = outputs[higher_pair_index]["similarity"];
+            lower_pair_index = documentPairs.map(d => d["g_id"]).indexOf(1);
+            lower_score = outputs[lower_pair_index]["similarity"];
+            if (higher_score <= lower_score) {
+                allGoldenCheck = false;
+            }
+            if (!allGoldenCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "golden_standard_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            return allOutputsMovedCheck && allTimesCheck && allGoldenCheck;
+        }
+
+        $(function () {
+            $("#previous-pair").click(function () {
+                var pair = parseInt($("#current-pair").text());
+                newPair = pair - 1;
+                showContent(newPair);
+                log_event("moved_backward", {
+                    new_pair_index: newPair,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#next-pair").click(function () {
+                var pair = parseInt($("#current-pair").text());
+                newPair = pair + 1;
+                showContent(newPair);
+                log_event("moved_forward", {
+                    new_pair_index: newPair,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#ready-button").click(function () {
+                $("#instructions-project-header").addClass("d-none");
+                $("#instructions-project").addClass("d-none");
+                $(this).addClass("d-none");
+                $("#instructions-toggle").removeClass("d-none");
+                $("#instructions-panel").addClass("collapse");
+                $("#task-panel").removeClass("d-none");
+                showContent(1);
+                log_event("task_started", null);
+            });
+            $("#instructions-toggle").click(function () {
+                is_shown = $("#instructions-panel").hasClass("show");
+                if (is_shown) {
+                    $("#instructions-toggle-text").text("Show Instructions");
+                    log_event("closed_instructions", null);
+                } else {
+                    $("#instructions-toggle-text").text("Hide Instructions");
+                    log_event("opened_instructions", null);
+                }
+            });
+            $("[type=range]").mouseup(function () {
+                $(this).removeClass("unmoved");
+                [_, type] = this.id.split("-");
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                outputs[pairIndex][type] = parseInt($(this).val());
+            });
+            $("#input-reason").change(function () {
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                outputs[pairIndex]["reason"] = $(this).val();
+            });
+            $("input[type=number]").change(function () {
+                [_, type] = this.id.split("-");
+                value = $(this).val();
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                if (!validateRegex(value)) {
+                    $(this).addClass("wrong");
+                    $('#input-similarity-message').removeClass('d-none')
+                    outputs[pairIndex][type] = -2;
+                } else {
+                    $(this).removeClass("wrong");
+                    $('#input-similarity-message').addClass('d-none')
+                    outputs[pairIndex][type] = parseFloat($(this).val());
+                }
+                if (outputs[pairIndex]["similarity"] == -2) {
+                    $("#next-pair").attr("disabled", true);
+                    $("#previous-pair").attr("disabled", true);
+                    $("#submit").attr("disabled", true);
+                } else {
+                    $("#next-pair").attr("disabled", false);
+                    $("#previous-pair").attr("disabled", false);
+                    $("#submit").attr("disabled", false);
+                }
+            });
+            $("#submit").click(function () {
+                if (verifyAnswers()) {
+                    $("#successModal").modal("toggle");
+                    $("#successModal").on("hidden.bs.modal", function () {
+                        log_event("task_finished", null);
+                        $("#feedback").val($("#feedback_text").val());
+                        $("#outputs").val(JSON.stringify(outputs));
+                        $("#times").val(JSON.stringify(times));
+                        $("#events").val(JSON.stringify(events));
+                        $("#submitButton").trigger("click");
+                    });
+                } else {
+                    failCount = failCount + 1;
+                    if (failCount >= 3) {
+                        $("#warning-text").html(
+                            "Your answer didn't pass our quality check.<br><br><strong>Unfortunately, you've reached the maximum amount of trials.<br><br>This window will be erased. Thank you very much for your work and please press return above so other worker may take this task.</strong>"
+                        );
+                        $("#errorModal").modal("toggle");
+                        $("#errorModal").on("hidden.bs.modal", function () {
+                            $("*").empty();
+                        });
+                    } else {
+                        $("#errorModal").modal("toggle");
+                    }
+                }
+            });
+        });
+        turkSetAssignmentID();
+    </script>
+</body>
+
+</html>

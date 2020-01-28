@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Document Similarity Task</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/mturk-public/externalHIT_v1.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+        integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous" />
+    <style>
+        input[type="range"].unmoved::-webkit-slider-thumb {
+            border: 1px solid #dddddd;
+            background: #dddddd;
+        }
+
+        input[type="range"].unmoved::-moz-range-thumb {
+            border: 1px solid #dddddd;
+            background-color: #dddddd;
+        }
+
+        input[type="number"].wrong {
+            border-color: red;
+            color: red;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container p-5">
+        <div class="row justify-content-center">
+            <button type="button" class="btn btn-primary col-sm-10 d-none" data-toggle="collapse"
+                data-target="#instructions-panel" id="instructions-toggle">
+                <span id="instructions-toggle-text">Show Instructions</span>
+            </button>
+        </div>
+        <div id="instructions-panel" class="row">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm text-center" style="background-color: #edfcfb;">
+                <h4 class="text-left mt-3"><strong>Task instructions</strong></h4>
+                <dl class="dl-horizontal text-left">
+                    <dt id="instructions-project-header">Project</dt>
+                    <dd id="instructions-project"></dd>
+                    <dt>Introduction</dt>
+                    <dd id="instructions-intro"></dd>
+                    <dt>What is similarity</dt>
+                    <dd id="instructions-similarities"></dd>
+                    <dt>Task rules</dt>
+                    <dd id="instructions-rules"></dd>
+                </dl>
+                <button type="button" class="btn btn-success col-sm-2 mb-3" id="ready-button">
+                    I'm ready!
+                </button>
+            </div>
+        </div>
+        <br />
+        <div id="task-panel" class="row d-none">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm" style="background-color: #edfcfb;">
+                <h4 class="text-left mt-3">
+                    Pair <strong><span id="current-pair"></span></strong> of
+                    <strong><span id="n-pairs"></span></strong>:
+                </h4>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h5><span id="title-1"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-1"></p>
+                        </div>
+                        <ul id="metadata-1" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                    <div class="col-sm-6">
+                        <h5><span id="title-2"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-2"></p>
+                        </div>
+                        <ul id="metadata-2" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                </div>
+                <br />
+                ${context_inputs}
+                <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <form>
+                        <label for="input-reason">Please tell us what similarities and differences you found. At least 20 characters.</label>
+                        <textarea class="form-control mx-auto custom-range pl-4 pr-4" rows="5" id="input-reason"
+                            placeholder="Provide a reason here ..."></textarea>
+                    </form>
+                </div>
+                <div class="row p-3">
+                    <button type="button" class="btn btn-primary col-sm-2 mr-auto" id="previous-pair">
+                        Previous
+                    </button>
+                    <button type="button" class="btn btn-success col-sm-2 ml-auto" id="presubmit" data-toggle="modal"
+                        data-target="#submitModal">
+                        Submit
+                    </button>
+                    <button type="button" class="btn btn-primary col-sm-2 ml-auto" id="next-pair">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="submitModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Submit your work?</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    Please make sure every question has been properly answered before
+                    submitting your work. Incomplete work will not be rewarded!
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-danger ml-auto" data-dismiss="modal" value="Cancel" />
+                    <input type="button" class="btn btn-success mr-auto" data-dismiss="modal" value="Submit"
+                        id="submit" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="errorModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Warning</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="warning-text">Your answer didn't pass our quality check. Please review your
+                        answers and try again! Try spending a little more time in each pair.</span>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-warning mx-auto" data-dismiss="modal" value="OK"
+                        id="close_error" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="successModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Success!</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="success-text">Your answer passed our quality check! Press finish to submit
+                        them. We appreciate any feedback you may have on the task.</span>
+                </div>
+                <textarea class="form-control" rows="5" id="feedback_text"
+                    placeholder="Type your feeback here ..."></textarea>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-success mx-auto" data-dismiss="modal" value="Finish"
+                        id="close_success" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <form name="mturk_form" method="post" id="mturk_form" action="https://www.mturk.com/mturk/externalSubmit">
+        <input type="hidden" value="" name="assignmentId" id="assignmentId" />
+        <input type="submit" id="submitButton" style="visibility: hidden;" />
+        <input type="hidden" name="outputs" value="" id="outputs" />
+        <input type="hidden" name="times" value="" id="times" />
+        <input type="hidden" name="events" value="" id="events" />
+        <input type="hidden" name="feedback" value="" id="feedback" />
+    </form>
+    <script language="Javascript">
+        let documentPairs = ${documents};
+
+        let total = documentPairs.length;
+
+        var outputs = [];
+        for (i = 0; i < total; i++) {
+            outputs[i] = { similarity: -1, confidence: -1, reason: "" };
+        }
+
+        var events = [];
+
+        function log_event(event_type, event_attr) {
+            event_obj = {
+                timestamp: new Date(),
+                type: event_type
+            };
+            if (event_attr != null) {
+                event_obj.attr = event_attr;
+            }
+            events.push(event_obj);
+        }
+
+        log_event("page_displayed", null);
+
+        var times = Array(total).fill(0.0);
+        var lastChange = null;
+
+        failCount = 0;
+
+        $("#instructions-project").html(${instructions_project});
+        $("#instructions-intro").html(${instructions_intro});
+        $("#instructions-similarities").html(${instructions_similarities});
+        $("#instructions-rules").html(${instructions_rules});
+
+        $("#n-pairs").text(total);
+
+        function showContent(currentPair) {
+            if (lastChange) {
+                times[parseInt($("#current-pair").text()) - 1] +=
+                    Date.now() - lastChange;
+            }
+            $("#current-pair").text(currentPair);
+            if (currentPair == 1) {
+                $("#previous-pair").hide();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            } else if (currentPair == total) {
+                $("#previous-pair").show();
+                $("#next-pair").hide();
+                $("#presubmit").show();
+            } else {
+                $("#previous-pair").show();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            }
+            pairIndex = currentPair - 1;
+            output = outputs[pairIndex];
+            if (output["similarity"] == -1) {
+                if ($("#input-similarity").prop("type") == "range") {
+                    $("#input-similarity").val(0);
+                } else if ($("#input-similarity").prop("type") == "number") {
+                    $("#input-similarity").val("");
+                }
+                $("#input-similarity").addClass("unmoved");
+            } else {
+                $("#input-similarity").val(output["similarity"]);
+                $("#input-similarity").removeClass("unmoved");
+            }
+            if (output["confidence"] == -1) {
+                $("#input-confidence").val(0);
+                $("#input-confidence").addClass("unmoved");
+            } else {
+                $("#input-confidence").val(output["confidence"]);
+                $("#input-confidence").removeClass("unmoved");
+            }
+
+            $("#input-reason").val(output["reason"]);
+
+            $("#document-1").text(documentPairs[pairIndex]["document_1"]["body"]);
+            $("#title-1").text(documentPairs[pairIndex]["document_1"]["title"]);
+            $("#metadata-1").empty();
+            for (md in documentPairs[pairIndex]["document_1"]["metadata"]) {
+                $("#metadata-1").append(
+                    `<li><i>${md}</i>: ${documentPairs[pairIndex]["document_1"]["metadata"][md]}</li>`
+                );
+            }
+
+            $("#document-2").text(documentPairs[pairIndex]["document_2"]["body"]);
+            $("#title-2").text(documentPairs[pairIndex]["document_2"]["title"]);
+            $("#metadata-2").empty();
+            for (md in documentPairs[pairIndex]["document_2"]["metadata"]) {
+                $("#metadata-2").append(
+                    `<li><i>${md}</i>: ${documentPairs[pairIndex]["document_2"]["metadata"][md]}</li>`
+                );
+            }
+
+            lastChange = Date.now();
+        }
+
+        function validateRegex(str) {
+            var reU = /^(null|(?!0*[.]0*$|[.]0*$|0*$)\d+[.]?\d{0,}$)/;
+            return reU.test(str);
+        }
+
+        function verifyAnswers() {
+            times[times.length - 1] += Date.now() - lastChange;
+            lastChange = Date.now();
+
+            var allOutputsMovedCheck = true;
+            const outputs_flat = [].concat(...outputs)
+            for (s of outputs_flat) {
+                if (
+                    s["similarity"] == -1 ||
+                    s["confidence"] == -1 ||
+                    s["reason"].trim().length < 19
+                ) {
+                    allOutputsMovedCheck = false;
+                }
+            }
+            if (!allOutputsMovedCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "outputs_moved_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            var allTimesCheck = true;
+            for (t of times) {
+                if (t < ${time_thr}) {
+                    allTimesCheck = false;
+                }
+            }
+            if (!allTimesCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "minimum_time_check",
+                    times: JSON.parse(JSON.stringify(times))
+                });
+            }
+
+            var allGoldenCheck = true;
+
+            higher_pair_index = documentPairs.map(d => d["g_id"]).indexOf(2);
+            higher_score = outputs[higher_pair_index]["similarity"];
+            lower_pair_index = documentPairs.map(d => d["g_id"]).indexOf(1);
+            lower_score = outputs[lower_pair_index]["similarity"];
+            if (higher_score <= lower_score) {
+                allGoldenCheck = false;
+            }
+            if (!allGoldenCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "golden_standard_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            return allOutputsMovedCheck && allTimesCheck && allGoldenCheck;
+        }
+
+        $(function () {
+            $('#input-reason').bind('copy paste', function (e) {
+                e.preventDefault();
+            });
+            $("#previous-pair").click(function () {
+                var pair = parseInt($("#current-pair").text());
+                newPair = pair - 1;
+                showContent(newPair);
+                log_event("moved_backward", {
+                    new_pair_index: newPair,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#next-pair").click(function () {
+                var pair = parseInt($("#current-pair").text());
+                newPair = pair + 1;
+                showContent(newPair);
+                log_event("moved_forward", {
+                    new_pair_index: newPair,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#ready-button").click(function () {
+                $("#instructions-project-header").addClass("d-none");
+                $("#instructions-project").addClass("d-none");
+                $(this).addClass("d-none");
+                $("#instructions-toggle").removeClass("d-none");
+                $("#instructions-panel").addClass("collapse");
+                $("#task-panel").removeClass("d-none");
+                showContent(1);
+                log_event("task_started", null);
+            });
+            $("#instructions-toggle").click(function () {
+                is_shown = $("#instructions-panel").hasClass("show");
+                if (is_shown) {
+                    $("#instructions-toggle-text").text("Show Instructions");
+                    log_event("closed_instructions", null);
+                } else {
+                    $("#instructions-toggle-text").text("Hide Instructions");
+                    log_event("opened_instructions", null);
+                }
+            });
+            $("[type=range]").mouseup(function () {
+                $(this).removeClass("unmoved");
+                [_, type] = this.id.split("-");
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                outputs[pairIndex][type] = parseInt($(this).val());
+            });
+            $("#input-reason").change(function () {
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                outputs[pairIndex]["reason"] = $(this).val();
+            });
+            $("input[type=number]").change(function () {
+                [_, type] = this.id.split("-");
+                value = $(this).val();
+                pair = parseInt($("#current-pair").text());
+                pairIndex = pair - 1;
+                if (!validateRegex(value)) {
+                    $(this).addClass("wrong");
+                    $('#input-similarity-message').removeClass('d-none')
+                    outputs[pairIndex][type] = -2;
+                } else {
+                    $(this).removeClass("wrong");
+                    $('#input-similarity-message').addClass('d-none')
+                    outputs[pairIndex][type] = parseFloat($(this).val());
+                }
+                if (outputs[pairIndex]["similarity"] == -2) {
+                    $("#next-pair").attr("disabled", true);
+                    $("#previous-pair").attr("disabled", true);
+                    $("#submit").attr("disabled", true);
+                } else {
+                    $("#next-pair").attr("disabled", false);
+                    $("#previous-pair").attr("disabled", false);
+                    $("#submit").attr("disabled", false);
+                }
+            });
+            $("#submit").click(function () {
+                if (verifyAnswers()) {
+                    $("#successModal").modal("toggle");
+                    $("#successModal").on("hidden.bs.modal", function () {
+                        log_event("task_finished", null);
+                        $("#feedback").val($("#feedback_text").val());
+                        $("#outputs").val(JSON.stringify(outputs));
+                        $("#times").val(JSON.stringify(times));
+                        $("#events").val(JSON.stringify(events));
+                        $("#submitButton").trigger("click");
+                    });
+                } else {
+                    failCount = failCount + 1;
+                    if (failCount >= 3) {
+                        $("#warning-text").html(
+                            "Your answer didn't pass our quality check.<br><br><strong>Unfortunately, you've reached the maximum amount of trials.<br><br>This window will be erased. Thank you very much for your work and please press return above so other worker may take this task.</strong>"
+                        );
+                        $("#errorModal").modal("toggle");
+                        $("#errorModal").on("hidden.bs.modal", function () {
+                            $("*").empty();
+                        });
+                    } else {
+                        $("#errorModal").modal("toggle");
+                    }
+                }
+            });
+        });
+        turkSetAssignmentID();
+    </script>
+</body>
+
+</html>

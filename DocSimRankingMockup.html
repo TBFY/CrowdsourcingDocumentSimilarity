@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Document Similarity Task</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://s3.amazonaws.com/mturk-public/externalHIT_v1.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+        integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous" />
+    <style>
+        input[type="range"].unmoved::-webkit-slider-thumb {
+            border: 1px solid #dddddd;
+            background: #dddddd;
+        }
+
+        input[type="range"].unmoved::-moz-range-thumb {
+            border: 1px solid #dddddd;
+            background-color: #dddddd;
+        }
+
+        .column {
+            background-color: #fafafa;
+            border: #dedede 1px solid;
+            float: left;
+            width: 100%;
+            border-radius: 6px;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .column_list {
+            float: left;
+            min-height: 200px;
+            width: 96%;
+            margin-left: 2%;
+            border-radius: 8px;
+        }
+
+        .apc_inner_item {
+            display: block;
+            background: #f4f4f4;
+            border: solid 1px #eaeaea;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 8px 8px 12px 8px;
+            cursor: pointer;
+        }
+
+        .apc_inner_item:hover {
+            border: solid 1px #d8d8d8;
+        }
+
+        .highlited{
+            background-color: #cef1ef;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container p-5">
+        <div class="row justify-content-center">
+            <button type="button" class="btn btn-primary col-sm-10 d-none" data-toggle="collapse"
+                data-target="#instructions-panel" id="instructions-toggle">
+                <span id="instructions-toggle-text">Show Instructions</span>
+            </button>
+        </div>
+        <div id="instructions-panel" class="row">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm text-center" style="background-color: #edfcfb;">
+                <h4 class="text-left mt-3"><strong>Task instructions</strong></h4>
+                <dl class="dl-horizontal text-left">
+                    <dt id="instructions-project-header">Project</dt>
+                    <dd id="instructions-project"></dd>
+                    <dt>Introduction</dt>
+                    <dd id="instructions-intro"></dd>
+                    <dt>What is similarity</dt>
+                    <dd id="instructions-similarities"></dd>
+                    <dt>Task rules</dt>
+                    <dd id="instructions-rules"></dd>
+                </dl>
+               <button type="button" class="btn btn-success col-sm-2 mb-3" id="ready-button">
+                    I'm ready!
+                </button>
+            </div>
+        </div>
+        <br />
+        <div id="task-panel" class="row d-none">
+            <div class="col-sm-10 mx-auto border rounded shadow-sm" style="background-color: #edfcfb;">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h4 class="text-left mt-3">
+                            Main document <strong><span id="current-ranking"></span></strong> of
+                            <strong><span id="n-rankings"></span></strong>:
+                        </h4>
+                        <h5><span id="title-1"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-1"></p>
+                        </div>
+                        <ul id="metadata-1" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                    <div class="col-sm-6">
+                        <h4 class="text-left mt-3">
+                            Document <strong><span id="current-doc"></span></strong> of
+                            <strong><span id="n-docs"></span></strong>:
+                        </h4>
+                        <h5><span id="title-2"></span></h5>
+                        <div class="col-sm mx-auto bg-light border rounded p-2"
+                            style="height: 400px; overflow-y: scroll;">
+                            <p id="document-2"></p>
+                        </div>
+                        <ul id="metadata-2" style="list-style-type:none;padding-left:0"></ul>
+                    </div>
+                </div>
+                <br />
+                <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <p>Please drag the documents on the list to the left towards the empty list to the right, ranking them based on how similar they are to the main document, with the most similar on top. Clicking on a tile will display the document
+                        on the right panel above.</p>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="column">
+                                <div id="column_unranked" class="column_list">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="column">
+                                <div id="column_ranked" class="column_list">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <form>
+                        <label for="input-confidence">How confident are you of your answer?</label>
+                        <input type="range" class="mx-auto custom-range pl-4 pr-4 unmoved" id="input-confidence" min="0" max="4">
+                        <div class="row">
+                            <p class="col-sm-6 text-left">Not confident</p>
+                            <p class="col-sm-6 text-right">Highly confident</p>
+                        </div>
+                    </form>
+                </div>
+                <br />
+                <div class="col-sm mx-auto bg-light border rounded p-2">
+                    <form>
+                        <label for="input-reason">Please tell us what similarities and differences you found. At least 20 characters.</label>
+                        <textarea class="form-control mx-auto custom-range pl-4 pr-4" rows="5" id="input-reason" placeholder="Provide a reason here ..."></textarea>
+                    </form>
+                </div>
+                <div class="row p-3">
+                    <button type="button" class="btn btn-primary col-sm-2 mr-auto" id="previous-pair">
+                        Previous
+                    </button>
+                    <button type="button" class="btn btn-success col-sm-2 ml-auto" id="presubmit" data-toggle="modal"
+                        data-target="#submitModal">
+                        Submit
+                    </button>
+                    <button type="button" class="btn btn-primary col-sm-2 ml-auto" id="next-pair">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="submitModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Submit your work?</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    Please make sure you're confident of your answer before submitting.
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-danger ml-auto" data-dismiss="modal" value="Cancel" />
+                    <input type="button" class="btn btn-success mr-auto" data-dismiss="modal" value="Submit"
+                        id="submit" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="errorModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Warning</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="warning-text">Your answer didn't pass our quality check. Please review your
+                        answers and try again!</span>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-warning mx-auto" data-dismiss="modal" value="OK"
+                        id="close_error" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="successModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="modal-title mx-auto">Success!</h4>
+                </div>
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <span id="success-text">Your answer passed our quality check! Press finish to submit them. We appreciate any feedback you may have on the task.</span>
+                </div>
+                <textarea class="form-control" rows="5" id="feedback_text" placeholder="Type your feeback here ..."></textarea>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <input type="button" class="btn btn-success mx-auto" data-dismiss="modal" value="Finish"
+                        id="close_success" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <form name="mturk_form" method="post" id="mturk_form" action="https://www.mturk.com/mturk/externalSubmit">
+        <input type="hidden" value="" name="assignmentId" id="assignmentId" />
+        <input type="submit" id="submitButton" style="visibility: hidden;" />
+        <input type="hidden" name="outputs" value="" id="outputs" />
+        <input type="hidden" name="times" value="" id="times" />
+        <input type="hidden" name="events" value="" id="events" />
+        <input type="hidden" name="feedback" value="" id="feedback" />
+    </form>
+    <script language="Javascript">
+        let documentRankings = [{'main_document': {'id': 'ocds-0c46vo-0001-c63a2172-90d9-4d8a-90ae-37b0da369ed0_Tender_ocds-b5fd17-6aa9eea8-233b-4ab7-bacc-ed3569148a19-derbscc001-dn361301-64909393', 'body': 'Derbyshire County Council Adult Care are inviting tenders from suitably qualified providers to deliver a visual impairment rehabilitation information and advice.  The visual impairment rehabilitation information and advice service will support people with a visual impairment or who have recently experienced sight loss to remain independent and at home and also access appropriate and timely information and advice.  The service will also operate a mobile resource centre and a range of community drop in events at venues across the county.'}, 'documents': [{'id': 'ocds-0c46vo-0133-145328-2019_Tender_145328-2019_td', 'body': 'Bekkestua Lower Secondary School is currently a lower secondary school with roughly 475 students and 50 employees.  The schools are located at Falkeveien 14-16 and have Nadderud Arena Nadderudhallen and the new Bekkestua Primary School as their closest neighbours.  The school buildings block A and B are originally from 1968 but the building stock was partly rehabilitated internally in 20122013.  In connection with the rehabilitation a new breezeway was established linking the two blocks together.  In the planning phase it was concluded that the existing block A and breezeway would be kept and partially rehabilitated.  Block B will be demolished and a new extension will be established.  Bekkestua Lower Secondary School will be constructed as the first ten parallel lower secondary school in Brum Municipality.  The main concept for the new ten parallel Bekkestua Lower Secondary School will be a building structure with an H for with a central internal common area in the middle the heart of the school that binds all the wings with stairs teaching workspaces and special rooms together. Further information about the project and the contract can be found in Part 2 Assignment Description with associated annex.', 'g_id': 1}, {'id': 'ocds-0c46vo-0001-c63a2172-90d9-4d8a-90ae-37b0da369ed0_Tender_ocds-b5fd17-6aa9eea8-233b-4ab7-bacc-ed3569148a19-derbscc001-dn361301-64909393_para', 'body': 'Derbyshire County Council Adult Care accepts tenders from eligible organisations to provide information and advice on visual impairment recovery.  Data and guidance on visual impairment can enable visually impaired persons or people with recent vision failure to remain at home and comfortable and also receive appropriate and relevant information and advice.  A mobile information centre and a number of community events will also be held at locations across the area.', 'g_id': 2}, {'id': 'ocds-0c46vo-0133-134177-2019_Tender_134177-2019_td', 'body': 'Lot 2 Visual Impairment Services which  Provide timely information and advice to enable Adults to help themselves  Provide equipment that sustains Adults independence for longer  Provide reabling support that support community involvement and promotes independence Bidders will have the option to bid for one or both lots.  Lot 1 Hearing Impairment Services which  Reduce the stigma related to having a hearing loss  Design services and spaces to support good communication  Provide better communication support and understanding in the workplace including timely access to assistive devices language support for example British Sign Language BSL or Signed Supported English and speech-to-text  Promote strategies for the prevention of hearing loss and an understanding of hearing awareness  Encourage early awareness diagnosis and management of hearing loss  Provide timely access or signposting to communication support lip-reading classes hearing therapy or counselling support groups befriending services and assistive technologies  Promote inclusion and participation by ensuring that all public services are accessible and support language and communication needs.', 'g_id': 0}]}, {'main_document': {'id': 'ocds-0c46vo-0005-41280_Tender_41280', 'body': "The City wishes to procure a Childrens Centre system for the City of London and would like the solution to be implemented and operational by September 2019 to coincide with childrens centre review outlined above.   Information is currently captured using an Excel database.    The high level requirements of the systemsolution include    Registering childrens centre service users  Recording the details of and activities undertaken by the service user Reporting on the activities service user attributes and performance of the service delivery Ability to communicate with registered users Planning and timetabling of activities with bookable sessions Potential to share information or interface with other systems Potential to make use of innovative technology including to encourage service users to register encourage service providers to use the systems capabilities and support those without English as a first language.   This is an initial market engagement exercise to gauge the capacity and capability in the market for this type of software solution.   There will be a Meet the Buyer event on Friday 8th February 2019 to give an overview of the City it's requirements for this project and to answer any questions from attendees.  "}, 'documents': [{'id': 'ocds-0c46vo-0009-DN349830-1_Tender_DN349830-1', 'body': 'The London Borough of Hackney City of London Corporation and the City and Hackney Clinical Commissioning Group CCG wishes to engagework in partnership with Providers to deliver a range of Short Breaks services for disabled children and young people in the City and Hackney.  The aim of the Di. . . es the first round of this DPS will close on 21st March 2019.  Providers will be able to express an interest for round 2 from 22nd March 2019 but will not be able to access tender documents until November 2019 when round 2 opens.  The applications for the DPS will continue to be accepted until 2024.  More. . .  ', 'g_id': 0}, {'id': 'ocds-0c46vo-0022-FEB285748_Tender_FEB285748', 'body': 'Siglion Developments LLP Siglion is seeking to appoint a capable contractor to carry out the design and construction of a proposed circa 190 000 square foot public sector hub office development together with associated external works including completion of the spine road as part of the redevelopment of the former Vaux Brewery site in Sunderland the Project.  The Vaux site is a vacant brownfield site located on the south bank of the River Wear in the centre of the city.  The project will include the new civic offices of Sunderland City Council the Council together with additional office space for occupation by other public and private sector bodies.  The project will include the delivery of approximately approximately 152 000 square foot net internal area office space plus ancillary ground floor accommodation across 2 identified plots within the existing Vaux Masterplan plots 13 and 14.  The building has to be able to respond to the parameters defined within the Vaux Masterplan in terms of active frontage servicing and footprint and be responsible for a sustainable approach.  The proposed building will make use of the varying site levels at ground floor and offer an appropriate civic outward elevation facing the city.  The building is to be designed with a Well Building approach.  The programme is a key driver in the delivery of the project.  The project will be tendered on RIBA Stage 4a information prepared by the appointed design team.  The Architect and StructuralCivil Engineer will be novated to the successful contractor on the award of the proposed works contract.  Further information about the project can be found in the planning application documents for the project Ref 1900188FU4 which are available for inspection on the Councils website httpswww. sunderland. gov. ukonline-applicationsapplicationDetails. dokeyValPMEBTIBBLK100activeTabsummary Fixtures fittings and equipment may be included within this contract.  ', 'g_id': 0}, {'id': 'ocds-0c46vo-0015-1982807_Tender_1982807', 'body': 'The Contract is for the provision of a Landscape Architect led multi-disciplined team ICT to carry out option appraisals including all aspects of the RIBA 2013 plan of work.  The commission is for the appointment of a Consultancy team to prepare develop and project manage the delivery of the Councils revitalisation and environmental regeneration at Railway Park in Dungannon.  Working alongside Mid Ulster District Council MUDC staff and stakeholders to prepare all design and legislative requirements and project management for the delivery of the Project.  ', 'g_id': 0}]}, {'main_document': {'id': 'ocds-0c46vo-0005-41008_Tender_41008', 'body': 'Mental illness disproportionately affects young people  over half of mental health problems start by the age of 14 and 75 per cent by the age of 18.  Just as with physical health there is a duty to make sure that young people who are struggling with their mental health have access to all the support and care that they need including within schools.   1. 2 A Government Teacher Voice survey in 2016 found that only just over half 57 of teachers said they felt equipped to identify behaviour that may be linked to a mental health issue and only 40 of teachers said they felt equipped to teach children in the classroom with mental health needs.   1. 3 That is why In January 2017 the Prime Minister committed to having mental health first aid awareness training available to all secondary schools aiming to have trained at least one teacher in every secondary school by 2020 to help spot the early symptoms of mental health issues and make sure that the child receives the support they need '}, 'documents': [{'id': 'ocds-0c46vo-0022-FEB285761_Tender_FEB285761', 'body': 'Purchase of an inductive coupled plasma mass spectrometer.  ', 'g_id': 0}, {'id': 'ocds-0c46vo-0022-JAN342482_Tender_JAN342482', 'body': 'The common services more commonly know as National Services Scotland the authority acting through its division Procurement Commissioning and Facilities is undertaking this procurement of the supply of 3 Laser Flow Cytometer on behalf of SNBTS Scottish Blood Transfusion Service pursuant to the National Health Service Scotland Act 1978.  CPV 51430000 38000000.  ', 'g_id': 0}, {'id': 'ocds-0c46vo-0117-140049_Tender_140049', 'body': 'The Childrens Hospital Group responsible for delivering on this project is now seeking to appoint a service provider to supply install commission and maintain a Unified Communications System Platform initially for the unit at Connolly Hospital with an option depending on the success of this project to award a similar system in the unit in Tallaght Hospital in 2019.   It will be necessary that the selected service provider is suitably qualified and experienced in working in an acute hospital setting and it is proposed to use the Open Procedure due to the requirement to have this system functioning in Q1 2019.   The government has approved the development of a new childrens hospital to be co-located with St Jamess Hospital.   The hospital will be supported by two Paediatric Outpatient Department and Urgent Care Centres on the grounds of Connolly and Tallaght Hospitals providing Ambulatory  Urgent Care Services for children in the greater Dublin region.  ', 'g_id': 0}]}, {'main_document': {'id': 'ocds-0c46vo-0005-41074_Tender_41074', 'body': 'The BBC is launching a new multi-supplier design research framework to replace the existing agreement which expires in June 2019.  The new framework Design Research Framework II will provide the BBC with access to a range of specialist design research service providers.    Design research ensures the audience are at the heart of the BBC online taking insights and using them to empower decision-making and create products that our audience love to use.   Successful service providers awarded a place on the framework will have experience and capability to meet all the BBCs distinct design research requirements The framework will provide BBC with additional design research expertise through a framework of capable and qualified external service providers.  The service providers will conduct design research services across the BBCs online portfolio including News Sport Weather Childrens Education Radio and Music iPlayer Interactive TV Homepage alongside the systems and services that power these projects.    Service providers will work on a range of projects including research when no internal resource is available or where a distinct specialism andor technology of an external service provider is required.  '}, 'documents': [{'id': 'ocds-0c46vo-0022-FEB285802_Tender_FEB285802', 'body': 'Successful suppliers must be able to provide skilled resources that can work across the specified technology stacks within Lot 1.  The Lot 1 high level desirable skills are Development of web apps MS Windows form apps web APIs Windows service apps business intelligence BI systems c . net 4. 5 MVC JavascriptJQuery ReactRedux SSISSSASSSRS MDX ANSI SQL T-SQL SQL 2008.  ', 'g_id': 0}, {'id': 'ocds-0c46vo-0022-FEB282678_Tender_FEB282678', 'body': 'Cardiff University are purchasing a quartz crystal microbalance system.   The system is aimed at increasing collaboration across the university improve outputs publications further grants and encourage a step change in science.   The users will be spread across the three colleges of the University Colleges of Biomedical and Life Sciences Physical Sciences and Engineering and Arts Humanities and Social Sciences so applications will include but will not be restricted to Optimising surface coatings and topographies for orthopaedic and dental implants and studying their interaction with blood proteins cells and bacteria Investigating setting rigidity and water absorption of novel hydrogels for drug delivery Optimising and investigating cell delivery and drug release mechanisms from biodegradable and coated microneedle devices Understanding cell membranereceptor interactions with drugs and proteins in terms of function and channelpore formation Viscosity mass  thickness measurements of lipid bilayers and hydrogels Cell adhesiondesorptionspreading Biofilm studies.  Binding dissociation and degradation kinetic studies Proteindrug affinity and interaction studies Polymer film formationdeposition Corrosion studies of metals ', 'g_id': 0}, {'id': 'ocds-0c46vo-0022-FEB285732_Tender_FEB285732', 'body': 'In 2013 Swansea University as part of the High Performance Computing Wales project received a Fujitsu Super Computer.  Due to the high density nature of the equipment and uncertainties around timescales of the new Bay campus it was decided that a 3rd party datacentre was needed to accommodate it.  After evaluating several different options a new build water-cooled data centre at the Dylan Thomas Centre DTC was chosen as the best solution.  The work was undertaken by 2BM and completed in Dec 2012.  In 2018 Swansea University as part of the Super Computing Wales SCW project received an AtosDell supercomputer as a replacement for the original Fujitsu system.  SCW is part-funded by the European Regional Development Fund ERDF through the Welsh Government.  This resulted in the decommissioning of the 12 racks of Fujitsu equipment by Swansea University staff and installation of 5 racks of  AtosDell equipment by Alces Software.  Layoutpower of the current equipment can be found in Appendices A and G.  The current active cabinets are labelled as cab 1256 and 7 in Appendix G.  Current power requirement of this system is just under 100 kW.  Due to the ownership of the Dylan Thomas Centre changing and several operating issues being identified it has been decided that Swansea University would like to relocate the Super Computing Wales equipment to the Bay Data centre.  Cooling at this datacentre is currently inadequate to house high density systems and will need to be upgraded.  Engineering are in the process of procuring a new super computer as part of the IMPACT operation that is part funded by ERDF through the Welsh Government.  The super computer are also high density systems that would need to be housed at the Bay data centre once the cooling is upgraded.  The system is expected to require 2 x cabinets fed by 6 x Single phase PDUs each with 7x C19 sockets.  Information Services and Systems ISS have 1 rack that needs to be moved to a high density rack.  This houses a Dell VX Rail system and can run at up to 12. 5 kW.   There are currently 4 x 32Amp PDUs each with 6 x C19 sockets.  Further information is available within the technical specification documents.  ', 'g_id': 0}]}, {'main_document': {'id': 'ocds-0c46vo-0005-39393_Tender_39393', 'body': 'The Calderdale  Kirklees Posture and Mobility Service is commissioned and jointly funded by NHS Calderdale Greater Huddersfield and North Kirklees Clinical Commissioning Groups CCGs.  The service provides equipment to meet the postural and mobility needs of all people who are eligible to receive NHS services within Kirklees and Calderdale.   This does predominately mean wheelchairs and specialist postural seating.   As part of the commissioning cycle the CCGs would like to gather information and opinions from experienced service providers to help us to develop the service and be prepared to deal with future demands.  In common with other parts of the country demand for posture and mobility equipment is growing due to an ageing population and increasing numbers of children with more complex needs.  As budgets are not increasing at the same rate we need to make the best use of the funding we have.  '}, 'documents': [{'id': 'ocds-0c46vo-0133-011742-2019_Tender_011742-2019_td', 'body': 'Lincolnshire County Council wishes to commission a supported employment service that will help people with a learning disability and autism that are known to adult care and community wellbeing services to experience work and retain paid employment.  This service will be known as the specialist tailored employment partnership.  ', 'g_id': 0}, {'id': 'ocds-0c46vo-0133-046386-2019_Tender_046386-2019_td', 'body': 'Older people  Radyr and Morganstown.  ', 'g_id': 0}, {'id': 'ocds-0c46vo-0022-FEB284875_Tender_FEB284875', 'body': 'The young carers service will provide interventions to young people and their families that support Birmingham Childrens Trust vision and practice model as outlined in this service specification.  Interventions will be grounded in the relationship-based tradition and influenced by systemic strengths based and restorative approaches.  The young carers service will work to the Early Help guidelines as outlined in Working Together to Safeguard Children 2018 and Birminghams Early Help Strategy 20182022.  The service will work with young carers ensuring needs are addressed at the earliest opportunity preventing the escalation of need and maximising opportunities for educational and social development.  Service aims The aims of the young carers service are as follows  to carry out assessments of young carers needs  to provide a whole-family approach to supporting young carers through an integrated partnership approach  to provide early intervention and support to prevent reduce or delay escalation of need  provide young carers with personalised support so they can as individuals achieve the outcomes they need which will support them to learn develop enjoy their childhood and for them to achieve their full potential  raise awareness of young carers needs within schools and provide assistance to schools in adopting young carer friendly policies and practices  raise awareness of young carers needs amongst other universal and statutory services.  1 Service targets  to work with a minimum of 350 new young carers and their families each year  to work with at least a total of 650800 young carers and their families each year  to provide training to a minimum of 20 schools including secondary and primary schools each year and on-going support 2 Service activity The service provider will work in close partnership with other agencies to provide a co-ordinated and whole family response to meeting the needs of young carers.  The service will include the following components i a robust referral process ii complete an assessment iii targeted one-to-one support to young carers iv group work supportactivities v work with the whole family vi arrange support for the parentadult requiring care vii provide dedicated support to schools to raise awareness and support of young carers including viii work in partnership with other agencies.  ', 'g_id': 0}]}];
+
+        let total_rankings = documentRankings.length;
+        let total_documents = documentRankings[0]['documents'].length
+
+        var outputs = [];
+        for (i = 0; i < total_rankings; i++) {
+            outputs[i] = { similarity: Array(total_documents).fill(-1), confidence: -1, reason: "" };
+        }
+
+        var events = [];
+
+        function log_event(event_type, event_attr) {
+            event_obj = {
+                "timestamp": new Date(),
+                "type": event_type
+            };
+            if (event_attr != null) {
+                event_obj.attr = event_attr;
+            };
+            events.push(event_obj);
+        }
+
+        log_event("page_displayed", null);
+
+        var times = Array(total_rankings).fill(0.0);
+        var lastChange = null;
+        var lastHighlited = null;
+
+        failCount = 0;
+
+        $("#instructions-project").html("We are a group of researchers of the University of Southampton (United Kingdom). We are conducting research to evaluate how subjective similarity scores relate to the ones computed by automated algorithms. This study is funded by the European Union's Horizon 2020 research and innovation programme under grant agreement No 780247. No personal information will be collected during this experiment and all information will be treated anonymously, so there are no risks from participating and no way of identifying your personal details. After you've submitted your responses, there's no way to withdraw them. The data collected in this study will consist only of your inputs, the time you spent on the task and which buttons you clicked. It will be stored in a password protected computer and analysed for research purposes and its results published on academic journals. The study, with ref. no. ERGO/FPSE/54352, has received ethical approval on 16/01/2020, following the University of Southampton guidelines. For more information, check https://theybuyforyou.com. If you have any questions about how your data is used, or wish to exercise any of your rights, please consult the University's data protection webpage (https://www.southampton.ac.uk/legalservices/what-we-do/data-protection-and-foi.page) where you can make a request using our online form. If you need further assistance, please contact the University's Data Protection Officer (data.protection@soton.ac.uk).<br/> <b>By continuing with the task, you agree to take part in this research project and consent for the data collected to be used for the purpose of this study. Participation is voluntary and you may cancel the task at anytime for any reason before submitting it.</b> ");
+        $("#instructions-intro").html("In this task, you're asked to take a look at five sets of documents. For each set, there will be a main document and three extra documents, please read all documents, compare them to the main document and provide us with:<br>1) A ranking of the documents, in regards to how much they are similar to the main document. The most similar should be on the top of the ranking and the least similar on the bottom;<br>2) A confidence score, telling us how confident you are in your answer;<br>3) A short text telling us why you considered their similarity to be on that level.");
+        $("#instructions-similarities").html("Similarity here may be anything that makes you think that the two documents resemble each other, e.g. topics covered, theme, structure, purpose, style, etc. Anything that is found in document A, if it can also be found in document B, but not in other documents in general, would probably be a similarity. Please note that high similarity doesn't mean equal documents; two documents can be different but still be highly similar.");
+        $("#instructions-rules").html("- You can navigate through the sets of documents using the buttons at the bottom of the page. However, if the current set doesn't have a completed ranking, you won't be able to change to another set until you complete it. Don't worry, you can rearrage it later.<br>- You have to read each document fully to give us a good response. Try spending at least 30 seconds in each ranking<br>- You must fill all the information requested. The confidence slider only have information if it is blue. If it is already at the level you desire, just click it to make it blue. This means the text boxes should also all be filled.<br>- At the end of the task, we check these rules and also the quality of your work. If you don't pass the test, you can try two more times, for a total of three trials.<br>- Please press the button below when you're ready. You can open these instructions again anytime you wish.");
+
+        $("#n-rankings").text(total_rankings);
+        $("#n-docs").text(total_documents);
+
+        function generateTile(id) {
+            item_text = $('<p>').text('Document ' + (id+1)).css('margin-bottom', '0');
+            item = $('<div>')
+                .addClass('apc_inner_item')
+                .addClass('noselect')
+                .addClass('mx-auto')
+                .attr('doc_id', id+1)
+                .append(item_text)
+                .css('border', '1px black solid');
+            item.click(function(){
+                showContent(id+1);
+                log_event("displayed_document", {
+                    "ranking_id": parseInt($("#current-ranking").text()) - 1,
+                    "doc_id":id
+                })
+            });
+            return item
+        }
+
+        function showRanking(currentRanking) {
+            if (lastChange) {
+                times[parseInt($("#current-ranking").text()) - 1] +=
+                    Date.now() - lastChange;
+            }
+            $("#current-ranking").text(currentRanking);
+            if (currentRanking == 1) {
+                $("#previous-pair").hide();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            } else if (currentRanking == total_rankings) {
+                $("#previous-pair").show();
+                $("#next-pair").hide();
+                $("#presubmit").show();
+            } else {
+                $("#previous-pair").show();
+                $("#next-pair").show();
+                $("#presubmit").hide();
+            }
+            rankingIndex = currentRanking -1;
+            output = outputs[rankingIndex];
+
+            $('#column_unranked').empty()
+            $('#column_ranked').empty()
+            if(output['similarity'].includes(-1)){
+                for (i = 0; i < total_documents; i++) {
+                    $('#column_unranked').append(generateTile(i));
+                };
+                $("#next-pair").attr("disabled", true);
+                $("#presubmit").attr("disabled", true);
+            } else {
+                for (pos = total_documents; pos > 0; pos--) {
+                    i = output['similarity'].indexOf(pos);
+                    $('#column_ranked').append(generateTile(i));
+                };
+                $("#next-pair").attr("disabled", false);
+                $("#presubmit").attr("disabled", false);
+            }
+
+            if (output["confidence"] == -1) {
+                $("#input-confidence").val(0);
+                $("#input-confidence").addClass("unmoved");
+            } else {
+                $("#input-confidence").val(output["confidence"]);
+                $("#input-confidence").removeClass("unmoved");
+            }
+            $("#input-reason").val(output["reason"]);
+            
+            $("#document-1").text(documentRankings[rankingIndex]['main_document']["body"]);
+            $("#title-1").text(documentRankings[rankingIndex]['main_document']["title"]);
+            $("#metadata-1").empty();
+            for (md in documentRankings[rankingIndex]['main_document']["metadata"]) {
+                $("#metadata-1").append(
+                    `<li><i>${md}</i>: ${documentRankings[rankingIndex]['main_document']["metadata"][md]}</li>`
+                );
+            }
+            lastChange = Date.now();
+            showContent(1);
+        }
+        
+
+        function showContent(currentPair) {
+            pairIndex = currentPair - 1;
+            rankingIndex = parseInt($("#current-ranking").text()) - 1
+
+            if (lastHighlited){
+                $(".apc_inner_item[doc_id="+lastHighlited+"]").removeClass('highlited')
+            }
+
+            $("#current-doc").text(currentPair);
+            $("#document-2").text(documentRankings[rankingIndex]['documents'][pairIndex]["body"]);
+            $("#title-2").text(documentRankings[rankingIndex]['documents'][pairIndex]["title"]);
+            $("#metadata-2").empty();
+            for (md in documentRankings[rankingIndex]['documents'][pairIndex]["metadata"]) {
+                $("#metadata-2").append(
+                    `<li><i>${md}</i>: ${documentRankings[rankingIndex]['documents'][pairIndex]["metadata"][md]}</li>`
+                );
+            }
+            $(".apc_inner_item[doc_id="+currentPair+"]").addClass('highlited');
+            lastHighlited = currentPair;
+        }
+
+        $(".column_list").sortable({
+            placeholder: 'apc_drop-placeholder-blocked',
+            forcePlaceholderSize: true,
+            items: '.apc_inner_item',
+            connectWith: ".column_list",
+            tolerance: "pointer",
+            dropOnEmpty: true,
+            distance: 0.5,
+            start: function (event, ui) {
+                $(ui.item).addClass('moving')
+            },
+            // Cancel the dropping if conditions are true
+            beforeStop: function (ev, ui) {
+                if (
+                    // The element has the class apc_inner_item
+                    $(ui.item).hasClass('apc_inner_item') &&
+                    // Check if the element is released on the column_unranked
+                    $($(ui.placeholder).parent()[0]).attr('id') == 'column_unranked'
+                ) {
+                    $(ui.item).removeClass('moving')
+                    $(this).sortable('cancel');  /// <- Here is where you actually stop the dropping
+                }
+            },
+            stop: function (event, ui) {
+                $(ui.item).removeClass('moving');
+
+                if ($('#column_unranked').children().length == 0) {	
+                    ranking = []
+                    $('#column_ranked').children().each(function (i, e) {
+                        ranking.push($(e).attr("doc_id"))
+                    })
+                    rankingIndex = parseInt($("#current-ranking").text()) - 1
+                    n_docs = outputs[rankingIndex]['similarity'].length
+                    for(i=0;i<n_docs;i++){
+                        outputs[rankingIndex]['similarity'][i] = n_docs - ranking.indexOf(""+(i+1))
+                    }
+                    $("#next-pair").attr("disabled", false);
+                    $("#presubmit").attr("disabled", false);
+                }
+                
+                log_event("moved_tile", {"outputs":JSON.parse(JSON.stringify(outputs))});
+            }
+        });
+
+        function verifyAnswers() {
+            times[parseInt($("#current-ranking").text()) - 1] += Date.now() - lastChange;
+            lastChange = Date.now();
+
+            var allOutputsMovedCheck = true;
+            const outputs_flat = [].concat(...outputs)
+            for (s of outputs_flat) {
+                if (s["similarity"].includes(-1) || s["confidence"] == -1 || s["reason"].length < 19) {
+                    allOutputsMovedCheck = false;
+                }
+            }
+            if (!allOutputsMovedCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "outputs_moved_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            var allTimesCheck = true;
+            for (t of times) {
+                if (t < 1000) {
+                    allTimesCheck = false;
+                }
+            }
+            if (!allTimesCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "minimum_time_check",
+                    times: JSON.parse(JSON.stringify(times))
+                });
+            }
+
+            var allGoldenCheck = true;
+
+            g_ids = documentRankings.map(r => r['documents'])
+            g_ids = [].concat(...g_ids)
+            g_ids = g_ids.map(d => d['g_id'])
+            similarities = outputs.map(o => o['similarity'])
+            similarities = [].concat(...similarities)
+            higher_pair_index = g_ids.indexOf(2)
+            lower_pair_index = g_ids.indexOf(1)
+            higher_score = similarities[higher_pair_index]
+            lower_score  = similarities[lower_pair_index]
+            if (higher_score <= lower_score) {
+                allGoldenCheck = false;
+            }
+            if (!allGoldenCheck) {
+                log_event("verification_check_failed", {
+                    check_failed: "golden_standard_check",
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            }
+
+            return allOutputsMovedCheck && allTimesCheck && allGoldenCheck;
+        }
+
+        $(function () {
+            $('#input-reason').bind('copy paste', function (e) {
+                e.preventDefault();
+            });
+            $("#previous-pair").click(function () {
+                var ranking = parseInt($("#current-ranking").text());
+                newRanking = ranking - 1;
+                showRanking(newRanking);
+                log_event("moved_backward", {
+                    new_pair_index: newRanking,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#next-pair").click(function () {
+                var ranking = parseInt($("#current-ranking").text());
+                newRanking = ranking + 1;
+                showRanking(newRanking);
+                log_event("moved_forward", {
+                    new_pair_index: newRanking,
+                    outputs: JSON.parse(JSON.stringify(outputs))
+                });
+            });
+            $("#ready-button").click(function () {
+                $("#instructions-project-header").addClass("d-none");
+                $("#instructions-project").addClass("d-none");
+                $(this).addClass("d-none");
+                $("#instructions-toggle").removeClass("d-none");
+                $("#instructions-panel").addClass("collapse");
+                $("#task-panel").removeClass("d-none");
+                showRanking(1);
+                log_event("task_started", null);
+            });
+            $("#instructions-toggle").click(function () {
+                is_shown = $("#instructions-panel").hasClass("show");
+                if (is_shown) {
+                    $("#instructions-toggle-text").text("Show Instructions");
+                    log_event("closed_instructions", null);
+                } else {
+                    $("#instructions-toggle-text").text("Hide Instructions");
+                    log_event("opened_instructions", null);
+                }
+            });
+            $("#input-reason").change(function () {
+                ranking = parseInt($("#current-ranking").text());
+                rankingIndex = ranking - 1;
+                outputs[rankingIndex]['reason'] = $(this).val()
+            });
+            $("#input-confidence").mouseup(function () {
+                $(this).removeClass("unmoved");
+                ranking = parseInt($("#current-ranking").text());
+                rankingIndex = ranking - 1;
+                outputs[rankingIndex]['confidence'] = parseInt(
+                    $(this).val()
+                );
+            });
+            $("#submit").click(function () {
+                if (verifyAnswers()) {
+                    $("#successModal").modal("toggle");
+                    $("#successModal").on("hidden.bs.modal", function () {
+                        log_event("task_finished", null);
+                        $("#feedback").val($("#feedback_text").val());
+                        $("#outputs").val(JSON.stringify(outputs));
+                        $("#times").val(JSON.stringify(times));
+                        $("#events").val(JSON.stringify(events));
+                        $("#submitButton").trigger("click");
+                    });
+                } else {
+                    failCount = failCount + 1;
+                    if (failCount >= 3) {
+                        $("#warning-text").html(
+                            "Your answer didn't pass our quality check.<br><br><strong>Unfortunately, you've reached the maximum amount of trials.<br><br>This window will be erased. Thank you very much for your work and please press return above so other worker may take this task.</strong>"
+                        );
+                        $("#errorModal").modal("toggle");
+                        $("#errorModal").on("hidden.bs.modal", function () {
+                            $("*").empty();
+                        });
+                    } else {
+                        $("#errorModal").modal("toggle");
+                    }
+                }
+            });
+        });
+        turkSetAssignmentID();
+    </script>
+</body>
+
+</html>
