@@ -10,9 +10,10 @@ from datetime import datetime
 and y is the amount of seconds to wait between loops """
 
 create_hits_in_production = (sys.argv[1] == '1')
+# Change the string in MongoClient to a connection string to a Mongodb base/cluster of your choice
 
 db_client = pymongo.MongoClient(
-    "mongodb+srv://maiarocg:xin77812@cluster0-hjstc.mongodb.net/test?retryWrites=true&w=majority"
+    "mongodb+srv://<username>:<password>@cluster0-hjstc.mongodb.net/test?retryWrites=true&w=majority"
 )
 db = db_client['tbfy']
 hit_result_collection = db.hit_results if create_hits_in_production else db.hit_results_sandbox
