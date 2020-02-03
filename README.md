@@ -25,6 +25,7 @@ The repository is structured as follows: A config folder with configuration file
 
 ### Data
 
+- _DocSimHITsResultsALL.json_ is the file with all the results from the crowdsourcing, from every worker, for every variation. For the description of the contents, check the README file in the data folder;
 - _DocumentPairSetsForHITS.json_ is the file which contains all sets of pairs to be sent on the HITs for variations 1 and 2. Each set has the content of one HIT;
 - _DocumentRankingSetsForHITS.json_ is the file which contains all sets of rankings to be sent on the HITs for variation 3. Each set has the content of one HIT;
 - _documents_en_nometadate.json_ is the _documents.csv_ file processed to include only english documents with no extra information to them;
@@ -46,14 +47,17 @@ The repository is structured as follows: A config folder with configuration file
 - _DocSimPairsMagnitudeMockup.html_ is an example of the Variation 2 task which you can open on your browser;
 - _DocSimPairsRankingMockup.html_ is an example of the Variation 3 task which you can open on your browser;
 
+
 - _DocSimPairsTemplate.html_ is the file which serves as template for the Variation 1 and 2 tasks. It is populated by the contents of the corresponding config file and with one of the input elements below;
 - _contextSliderTemplate.html_ is the input element for the Variation 1 task, used to complete the _DocSimPairsTemplate.html_ file;
 - _contextMagnitudeTemplate.html_ is the input element for the Variation 2 task, used to complete the _DocSimPairsTemplate.html_ file;
 - _DocSimRankingTemplate_ is the file which serves as template for the Variation 3 task. It is populated by the contents of the corresponding config file;
 
+
 - _GenerateDocumentSets.ipynb_ is the notebook which takes the raw _documents_en_nometadata.json_, _pairs_en.csv_ and _golden-data-pairs-new.json_ files and turns them into the document sets to be sent in the HITs. Each document set is the document pairs/ranking which will be shown in a HIT;
 - _ExperimentRunner.ipynb_ is the notebook which runs the HITs;
 - _HITAnswerExplorer.ipynb_ is the notebook which analyses the results from the HITs;
+
 
 - _krippendorff_alpha.py_ is the python script which has the code for the krippendorff alpha. Created by Thomas Grill;
 - _mturk.py_ is the python script which serves as an interface to the MTurk API in the boto3 package. You should create a _config/amazon_credentials.json_ file with a valid access key and secret key to use MTurk with boto3;
