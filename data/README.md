@@ -66,12 +66,12 @@ The _DocSimHITsResultsALL.json_ file contains 813 documents. Each document consi
       - similarity: An array of 3 values, each for one of the documents to be ranked, representing their place in the ranking.
       - confidence: The confidence level of the worker for that ranking.
       - reason; The reason why the worker ranked them that way.
-  - times: A list of times, in seconds, the worker spent in each document pair/ranking of the set.
-  - events: A list of events, denoting what happened during the assignment. Each has:
-      - timestamp: When the event happened.
-      - type: What was the event.
-      - attr: Additional attributes of the event.
-  - feedback: Any feedback the worker had on the task.
+    - times: A list of times, in seconds, the worker spent in each document pair/ranking of the set.
+    - events: A list of events, denoting what happened during the assignment. Each has:
+        - timestamp: When the event happened.
+        - type: What was the event.
+        - attr: Additional attributes of the event.
+    - feedback: Any feedback the worker had on the task.
 
 ## Aggregation scripts for MongoDB
 
